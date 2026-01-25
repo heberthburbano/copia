@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Técnica - CyberNoir Engine</title>
+    <style>
+        /* --- VARIABLES Y RESET --- */
+        :root {
+            --bg-body: #0d1117;       /* Fondo oscuro tipo GitHub Dark */
+            --bg-sidebar: #161b22;    /* Fondo barra lateral */
+            --text-main: #c9d1d9;     /* Texto gris claro */
+            --text-heading: #ffffff;  /* Títulos blancos */
+            --accent: #ff0055;        /* Acento CyberNoir (Rosa/Rojo) */
+            --accent-hover: #ff4d88;
+            --code-bg: #22272e;       /* Fondo de bloques de código */
+            --border: #30363d;        /* Bordes sutiles */
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- SIDEBAR (NAVEGACIÓN) --- */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 { color: var(--text-heading); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar-header p { font-size: 0.85rem; opacity: 0.7; }
+
+        .nav-links { list-style: none; }
+        .nav-links li { margin-bottom: 0.5rem; }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-main);
+            display: block;
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255, 0, 85, 0.1);
+            color: var(--accent);
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255, 0, 85, 0.15);
+            color: var(--accent);
+            font-weight: bold;
+            border-left: 3px solid var(--accent);
+        }
+        
+        /* Botón volver */
+        .back-link {
+            margin-bottom: 1.5rem;
+            display: block;
+            color: var(--accent);
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main-content {
+            margin-left: 280px; /* Ancho del sidebar */
+            padding: 3rem 4rem;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        /* Tipografía de contenido */
+        h1, h2, h3 { color: var(--text-heading); margin-top: 2rem; margin-bottom: 1rem; }
+        h1 { font-size: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-top: 0; }
+        h2 { font-size: 1.8rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        h3 { font-size: 1.3rem; color: var(--accent); margin-top: 2rem; }
+        p, li { margin-bottom: 1rem; }
+        ul { padding-left: 1.5rem; }
+
+        /* Bloques de Código */
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: #ff7b72; 
+        }
+        p code {
+            background-color: rgba(110, 118, 129, 0.4);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            color: var(--text-heading);
+        }
+
+        /* IMÁGENES */
+        .doc-image {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin: 1rem 0;
+            transition: transform 0.3s ease;
+        }
+        .doc-image:hover { transform: scale(1.01); }
+        
+        .image-caption {
+            font-size: 0.85rem;
+            color: #8b949e;
+            text-align: center;
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 1rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 1rem;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <a href="index.html" class="back-link">⬅ Volver al Inicio</a>
+        
+        <div class="sidebar-header">
+            <h2>CyberNoir Engine</h2>
+            <p>Documentación Técnica v1.0</p>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#intro" class="active">1. Introducción</a></li>
+            <li><a href="#arquitectura">2. Arquitectura</a></li>
+            <li><a href="#logica">3. Lógica (GameEngine)</a></li>
+            <li><a href="#firebase">4. Backend & Persistencia</a></li>
+            <li><a href="#avanzado">5. Funciones Avanzadas</a></li>
+            <li><a href="#conclusion">6. Conclusión</a></li>
+            <li><a href="#anexo">7. Anexo: Desarrollo</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        
+        <header>
+            <h1>Documentación Técnica</h1>
+            <p><strong>Autor:</strong> Hebertt<br>
+            <strong>Curso:</strong> 2º Desarrollo de Aplicaciones Multiplataforma (DAM)<br>
+            <strong>Tecnologías:</strong> HTML5, CSS3, JavaScript (ES6), Firebase.</p>
+        </header>
+
+        <section id="intro">
+            <h2>1. Introducción y Objetivos</h2>
+            <p>El proyecto <strong>CyberNoir Engine</strong> consiste en el desarrollo de una <em>Single Page Application</em> (SPA) orientada a la ejecución de aventuras narrativas interactivas (Visual Novels). El sistema permite tomar decisiones que alteran el flujo de la historia.</p>
+            
+            <img src="doc-img/ui-final.png" alt="Interfaz Final del Juego" class="doc-image">
+            <span class="image-caption">Fig 1. Interfaz final del motor ejecutando la escena de apertura.</span>
+
+            <p>El objetivo principal ha sido crear un motor ligero y escalable que desacople la lógica de programación del contenido narrativo, permitiendo la carga dinámica de historias mediante estructuras de datos JSON. El sistema implementa persistencia de datos tanto local como en la nube, así como autenticación de usuarios.</p>
+        </section>
+
+        <section id="arquitectura">
+            <h2>2. Arquitectura del Sistema</h2>
+            <p>La aplicación sigue una arquitectura basada en componentes lógicos, separando la vista (HTML/CSS), el modelo de datos (JSON) y el controlador (Clase JS).</p>
+            
+            <h3>2.1 Estructura de Archivos</h3>
+            <ul>
+                <li><strong><code>index.html</code></strong>: Punto de entrada. Define la estructura semántica, los contenedores del DOM y los elementos modales (<code>&lt;dialog&gt;</code>).</li>
+                <li><strong><code>styles.css</code></strong>: Hoja de estilos. Utiliza <strong>CSS Grid</strong> para la maquetación de viñetas y Variables CSS para el tema oscuro.</li>
+                <li><strong><code>story-data.js</code></strong>: Contiene el objeto <code>STORY_DATA</code>, actuando como base de datos local narrativa.</li>
+                <li><strong><code>app.js</code></strong>: Núcleo de la aplicación. Contiene la clase <code>GameEngine</code>.</li>
+            </ul>
+        </section>
+
+        <section id="logica">
+            <h2>3. Lógica del Motor (GameEngine)</h2>
+            <p>La lógica se encapsula en la clase <code>GameEngine</code>, instanciada al cargar el DOM.</p>
+
+            <h3>3.1 Gestión del Estado</h3>
+            <p>El estado del juego no es estático; se almacena en el objeto <code>this.state</code>:</p>
+            <pre><code>this.state = {
+    currentSceneId: 'start', // Puntero a la escena actual
+    inventory: []            // Escalabilidad para futuros objetos
+};</code></pre>
+            <p>Cada vez que el usuario toma una decisión, este estado se actualiza y se invoca el renderizado.</p>
+
+            <h3>3.2 Motor de Renderizado</h3>
+            <p>El método <code>renderScene(sceneId)</code> limpia el contenedor principal e inyecta dinámicamente el HTML necesario. Soporta layouts dinámicos (<code>layout-hero</code>, <code>layout-split</code>) iterando sobre el array de paneles de la escena.</p>
+        </section>
+
+        <section id="firebase">
+            <h2>4. Persistencia y Backend (Firebase)</h2>
+            
+            <h3>4.1 Autenticación Híbrida</h3>
+            <p>Se ha implementado un sistema de login híbrido que mejora la experiencia de usuario:</p>
+            <ul>
+                <li><strong>OAuth (Google):</strong> Implementado mediante <code>signInWithPopup</code>.</li>
+                <li><strong>Email/Password:</strong> Para credenciales tradicionales, validado contra Firebase Auth.</li>
+                <li><strong>Observador:</strong> Uso de <code>auth.onAuthStateChanged</code> para actualizar la UI en tiempo real.</li>
+            </ul>
+
+            <div style="max-width: 600px; margin: 0 auto;">
+                <img src="doc-img/ui-login.png" alt="Modal de Login" class="doc-image">
+                <span class="image-caption">Fig 2. Modal de autenticación integrado (Google y Email).</span>
+            </div>
+
+            <h3>4.2 Base de Datos (Cloud Firestore)</h3>
+            <p>Se utiliza una base de datos NoSQL con la colección <code>partidas</code>. El ID del documento coincide con el UID del usuario, garantizando una relación 1:1 segura.</p>
+        </section>
+
+        <section id="avanzado">
+            <h2>5. Funcionalidades Avanzadas</h2>
+
+            <h3>5.1 Importación/Exportación Local</h3>
+            <p>Para compartir partidas sin conexión, se implementó un algoritmo de serialización:</p>
+            <ul>
+                <li><strong>Exportar:</strong> JSON → String → Base64 (<code>btoa</code>).</li>
+                <li><strong>Importar:</strong> Base64 → String → JSON (<code>atob</code>).</li>
+            </ul>
+
+            <h3>5.2 Gestión de Assets</h3>
+            <p>Las imágenes se sirven desde una carpeta local <code>/assets</code> para optimizar la carga y reducir la dependencia de URLs externas.</p>
+        </section>
+
+        <section id="conclusion">
+            <h2>6. Conclusión</h2>
+            <p>El proyecto cumple con los requisitos de una aplicación web moderna y persistente. Como futuras líneas de mejora para el TFG se plantea:</p>
+            <ul>
+                <li>Implementar un sistema de inventario visual.</li>
+                <li>Añadir transiciones CSS entre escenas.</li>
+                <li>Migrar el código a TypeScript para mejorar el tipado.</li>
+            </ul>
+        </section>
+
+        <section id="anexo" style="border-top: 2px dashed var(--border); padding-top: 2rem; margin-top: 3rem;">
+            <h2>7. Anexo: Proceso de Desarrollo</h2>
+            <p>Para el desarrollo de <em>CyberNoir Engine</em>, se siguió una metodología ágil apoyada en herramientas de IA Generativa para la definición de requisitos, generación de código base y dirección de arte.</p>
+
+            <h3>7.1 Evolución de la Interfaz (UI)</h3>
+            <p>El diseño evolucionó desde un prototipo básico centrado en la estructura del DOM hasta una interfaz temática coherente con la narrativa Cyberpunk.</p>
+            
+            <div class="gallery-grid">
+                <div>
+                    <img src="doc-img/ui-beta.png" alt="Prototipo Inicial" class="doc-image">
+                    <span class="image-caption">Fase 1: Prototipo funcional (Beta)</span>
+                </div>
+                <div>
+                    <img src="doc-img/ui-final.png" alt="Versión Final" class="doc-image">
+                    <span class="image-caption">Fase Final: Implementación de tema oscuro y controles</span>
+                </div>
+            </div>
+
+            <h3>7.2 Prompt Engineering</h3>
+            <p>Se utilizaron técnicas de <em>Prompt Engineering</em> para guiar a la IA en roles específicos (Desarrollador Senior, Director de Arte) y asegurar la calidad del código y assets.</p>
+
+            <div class="gallery-grid">
+                <div>
+                    <img src="doc-img/prompt-inicio.png" alt="Prompt Inicial" class="doc-image">
+                    <span class="image-caption">Definición inicial de requisitos SPA</span>
+                </div>
+                <div>
+                    <img src="doc-img/prompt-features.png" alt="Prompt Funcionalidades" class="doc-image">
+                    <span class="image-caption">Especificación de guardado en la nube</span>
+                </div>
+                <div>
+                    <img src="doc-img/prompt-estilo.png" alt="Prompt Estilo Artístico" class="doc-image">
+                    <span class="image-caption">Dirección de arte y consistencia visual</span>
+                </div>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); font-size: 0.9rem; color: #8b949e;">
+            <p>&copy; 2025 Hebertt. Proyecto Académico DAM.</p>
+        </footer>
+
+    </main>
+
+    <script>
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-links a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - sectionHeight / 4)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
