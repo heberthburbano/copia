@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memoria: Dashboard de Servidores</title>
+    <style>
+        /* --- ESTILOS CSS --- */
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg-light: #f8f9fa;
+            --text: #333;
+            --code-bg: #282c34;
+            --code-text: #abb2bf;
+            --error-bg: #ffebee;
+            --error-border: #ef5350;
+            --success-bg: #e8f5e9;
+            --success-border: #66bb6a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            color: var(--text);
+        }
+
+        /* Menú Lateral */
+        nav {
+            width: 280px;
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: fixed;
+            height: 100%;
+        }
+
+        nav h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 10px;
+        }
+
+        nav a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        nav a:hover, nav a.active {
+            background-color: var(--accent);
+            color: white;
+            padding-left: 15px;
+        }
+
+        /* Botón HOME específico */
+        .home-link {
+            background-color: rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* Contenido Principal */
+        main {
+            margin-left: 280px; /* Ancho del nav */
+            padding: 40px;
+            flex: 1;
+            overflow-y: auto;
+            background-color: white;
+            scroll-behavior: smooth;
+        }
+
+        section {
+            margin-bottom: 60px;
+            max-width: 900px;
+        }
+
+        h1 { font-size: 2.5rem; color: var(--primary); margin-bottom: 10px; }
+        h2 { font-size: 1.8rem; color: var(--primary); border-bottom: 2px solid var(--bg-light); padding-bottom: 10px; margin-top: 40px;}
+        h3 { font-size: 1.3rem; color: var(--accent); margin-top: 20px; }
+        p, li { line-height: 1.6; font-size: 1.05rem; }
+
+        /* Tarjetas de Error/Solución */
+        .troubleshooting-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .error-header {
+            background-color: var(--error-bg);
+            border-left: 5px solid var(--error-border);
+            padding: 10px 20px;
+            font-weight: bold;
+            color: #c62828;
+            display: flex;
+            align-items: center;
+        }
+
+        .solution-body {
+            background-color: var(--success-bg);
+            border-left: 5px solid var(--success-border);
+            padding: 15px 20px;
+        }
+
+        .cause { padding: 10px 20px; background: white; border-left: 5px solid #ccc; font-style: italic;}
+
+        /* Bloques de Código */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        code { font-family: inherit; }
+        
+        .inline-code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #d63384;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #888;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            nav { width: 100%; height: auto; position: relative; }
+            main { margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="home-link">⬅ Volver al Inicio</a>
+
+        <h2>📘 Memoria Proyecto</h2>
+        <a href="#intro" class="nav-link">1. Introducción</a>
+        <a href="#metodologia" class="nav-link">2. Metodología</a>
+        <a href="#errores" class="nav-link">3. Errores y Soluciones</a>
+        <a href="#tecnica" class="nav-link">4. Implementación Técnica</a>
+        <a href="#conclusion" class="nav-link">5. Conclusión</a>
+    </nav>
+
+    <main>
+        
+        <section id="intro">
+            <h1>Dashboard de Control de Servidores</h1>
+            <p><strong>Alumno:</strong> [Tu Nombre Aquí]</p>
+            <p><strong>Asignatura:</strong> [Nombre Asignatura]</p>
+            <hr>
+            
+            <h2>1. Introducción y Objetivos</h2>
+            <p>El objetivo principal de esta práctica ha sido desarrollar una aplicación web <em>Full-Stack</em> capaz de controlar y monitorizar máquinas virtuales alojadas en VirtualBox. La aplicación permite realizar acciones críticas de administración de sistemas a través de una interfaz amigable.</p>
+            <ul>
+                <li>📊 Visualización de estado (Running / Stopped).</li>
+                <li>📈 Estadísticas en tiempo real (Simulación de CPU/RAM).</li>
+                <li>⚙️ Control de energía (Encendido y Apagado remoto).</li>
+            </ul>
+        </section>
+
+        <section id="metodologia">
+            <h2>2. Metodología y Entorno</h2>
+            <p>El desarrollo se enfrentó al desafío de trabajar en un entorno Linux escolar con <strong>restricciones de permisos (sin sudo)</strong>. Para superar esto, se diseñó una arquitectura basada en software portable.</p>
+            
+            <h3>Configuración Portable</h3>
+            <p>En lugar de instalar Node.js en el sistema, se utilizó la versión de binarios precompilados. La estructura del proyecto se organizó de la siguiente manera:</p>
+            <pre>
+/media/vespertino/proyecto
+├── app/         (Código fuente: JS, HTML)
+└── node/        (Binarios de Node.js descomprimidos)
+            </pre>
+            <p>Esta configuración permite ejecutar el servidor en cualquier equipo Linux sin necesidad de instalación previa.</p>
+        </section>
+
+        <section id="errores">
+            <h2>3. Diario de Errores (Troubleshooting)</h2>
+            <p>A continuación se detallan los principales obstáculos técnicos encontrados y cómo fueron resueltos.</p>
+
+            <div class="troubleshooting-card">
+                <div class="error-header">🔴 Error 1: Permiso Denegado en Binarios</div>
+                <div class="cause">
+                    <strong>Causa:</strong> Linux bloquea por defecto la ejecución de archivos descargados de internet (`./node`).
+                </div>
+                <div class="solution-body">
+                    <strong>✅ Solución:</strong> Se otorgaron permisos explícitos de ejecución usando el comando <code>chmod</code>.
+                    <pre>chmod +x ../node/bin/node</pre>
+                </div>
+            </div>
+
+            <div class="troubleshooting-card">
+                <div class="error-header">🔴 Error 2: NPM no encuentra Node</div>
+                <div class="cause">
+                    <strong>Causa:</strong> Al intentar instalar librerías, el sistema buscaba Node en la ruta global <code>/usr/bin</code>, que no existía.
+                </div>
+                <div class="solution-body">
+                    <strong>✅ Solución:</strong> Se manipuló la variable de entorno <strong>PATH</strong> para incluir temporalmente nuestra carpeta portable.
+                    <pre>export PATH=$PWD/../node/bin:$PATH</pre>
+                </div>
+            </div>
+
+            <div class="troubleshooting-card">
+                <div class="error-header">🔴 Error 3: Lista de servidores vacía []</div>
+                <div class="cause">
+                    <strong>Causa:</strong> VirtualBox gestiona las VMs por usuario. El usuario actual no tenía máquinas creadas, aunque el sistema sí tuviera otras.
+                </div>
+                <div class="solution-body">
+                    <strong>✅ Solución:</strong> Se utilizó el comando <code>createvm</code> para registrar una máquina nueva en la sesión del usuario actual sin necesidad de interfaz gráfica.
+                </div>
+            </div>
+
+             <div class="troubleshooting-card">
+                <div class="error-header">🔴 Error 4: Rutas incompatibles (Windows/Linux)</div>
+                <div class="cause">
+                    <strong>Causa:</strong> El uso de rutas de estilo Windows (<code>C:\Program Files...</code>) causaba fallos en Linux.
+                </div>
+                <div class="solution-body">
+                    <strong>✅ Solución:</strong> Se detectó la ruta correcta usando <code>which VBoxManage</code> y se simplificó el código para usar el comando directo.
+                    <pre>const VBOX_PATH = 'VBoxManage';</pre>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="tecnica">
+            <h2>4. Implementación Técnica</h2>
+            
+            <h3>Backend (Node.js + Express)</h3>
+            <p>El backend actúa como un intermediario que traduce peticiones HTTP en comandos de terminal del sistema operativo.</p>
+            <pre>
+// Función para ejecutar comandos de sistema
+const ejecutar = (comando) => {
+    return new Promise((resolve) => {
+        exec(comando, (error, stdout) => {
+            resolve(stdout ? stdout.trim() : '');
+        });
+    });
+};
+
+// Endpoint para encender la máquina (Modo Headless)
+app.post('/api/start/:id', async (req, res) => {
+    await ejecutar(`${VBOX_PATH} startvm "${req.params.id}" --type headless`);
+    res.json({ status: 'iniciando' });
+});
+            </pre>
+
+            <h3>Frontend (Frontend + JS)</h3>
+            <p>Se utiliza <code>fetch()</code> para consultar la API cada 3 segundos y actualizar el DOM dinámicamente.</p>
+            <pre>
+async function update() {
+    const res = await fetch('http://localhost:3000/api/servers');
+    const data = await res.json();
+    // Lógica para pintar las tarjetas verde/rojo según estado
+}
+setInterval(update, 3000);
+            </pre>
+        </section>
+
+        <section id="conclusion">
+            <h2>5. Conclusión</h2>
+            <p>El proyecto ha demostrado la viabilidad de crear herramientas de administración de sistemas complejas utilizando tecnologías web estándar. Se ha logrado superar las barreras de seguridad y permisos del entorno educativo mediante el uso ingenioso de software portable y variables de entorno.</p>
+            <p>El resultado es un dashboard funcional, escalable y fácil de desplegar en cualquier distribución Linux.</p>
+
+            <footer>
+                <p>Desarrollado para la clase de [Tu Clase] - 2024</p>
+            </footer>
+        </section>
+    </main>
+
+    <script>
+        // Script para resaltar la sección activa en el menú al hacer scroll
+        const sections = document.querySelectorAll("section");
+        const navLinks = document.querySelectorAll(".nav-link");
+
+        window.onscroll = () => {
+            let current = "";
+
+            sections.forEach((section) => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 60) {
+                    current = section.getAttribute("id");
+                }
+            });
+
+            navLinks.forEach((li) => {
+                li.classList.remove("active");
+                if (li.getAttribute("href").includes(current)) {
+                    li.classList.add("active");
+                }
+            });
+        };
+    </script>
+</body>
+</html>
