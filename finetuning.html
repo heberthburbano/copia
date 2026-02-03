@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica: Fine Tuning con Axolotl - Dev Blog</title>
+    <style>
+        :root {
+            --bg-body: #0d1117;
+            --text-main: #c9d1d9;
+            --text-heading: #ffffff;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --accent: #d2a8ff;
+            /* Purple for AI/ML */
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --code-bg: #22272e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--text-heading);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: #8b949e;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            color: var(--accent);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(210, 168, 255, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: var(--text-heading);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .image-container {
+            margin: 2rem 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .caption {
+            transform: translateY(10px);
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            background-color: rgba(110, 118, 129, 0.4);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 85%;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .alert {
+            background-color: rgba(210, 168, 255, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            color: #e2c0ff;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .steps-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .steps-list li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="index.html" class="back-link">← Volver al inicio</a>
+        <br><br>
+        <h1>Fine Tuning con Axolotl</h1>
+        <span class="date">Publicado: 03 de Febrero, 2026</span>
+        <p>Documentación de errores y configuración del entorno para Fine Tuning de LLMs utilizando WSL2 y Axolotl.</p>
+    </header>
+
+    <main>
+
+        <section>
+            <h2>1. Configuración Inicial y Entorno</h2>
+            <p>El objetivo de esta práctica es configurar un entorno adecuado para realizar Fine Tuning. Dado que
+                <strong>Axolotl</strong> no es compatible nativamente con Windows, utilizaremos WSL2 (Windows Subsystem
+                for Linux) con Ubuntu.
+            </p>
+
+            <h3>Activación del Entorno Virtual</h3>
+            <p>Para activar el entorno de Python en Powershell, ejecutamos:</p>
+            <pre><code>venv\Scripts\Activate.ps1</code></pre>
+            <p>Es posible encontrarse con errores de políticas de ejecución. Para solucionarlo, debemos ejecutar:</p>
+            <pre><code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/error_policy_activacion_venv.png" alt="Error de politicas">
+                <p class="caption">Fig 1. Solución de errores de políticas de ejecución al activar el venv.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/creacion_carpeta_finetuning.png" alt="Creación de carpeta">
+                <p class="caption">Fig 2. Estructura inicial del proyecto.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>2. Instalación de WSL2 y Ubuntu</h2>
+            <p>Requerimos Git instalado y una GPU NVIDIA con drivers CUDA. El primer paso crítico es instalar WSL.</p>
+
+            <ul class="steps-list">
+                <li>Instalar WSL.</li>
+                <li>Reiniciar el equipo.</li>
+                <li>Habilitar virtualización en BIOS si aparece errores de compatibilidad (Intel VT-x / AMD-V).</li>
+            </ul>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/instalacion_wsl.png" alt="Instalación WSL">
+                <p class="caption">Fig 3. Proceso de instalación de WSL.</p>
+            </div>
+
+            <div class="alert">
+                <strong>Error Común:</strong> "WSL2 no es compatible con la configuración actual".<br>
+                Solución: Habilitar "Plataforma de máquina virtual" y virtualización en BIOS.
+            </div>
+        </section>
+
+        <section>
+            <h2>3. Verificación de GPU y Librerías</h2>
+            <p>Una vez dentro de Ubuntu en WSL, verificamos que la GPU sea accesible correctamente mediante
+                <code>nvidia-smi</code>.
+            </p>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/comprobacion_nvidia_smi.png" alt="Nvidia SMI">
+                <p class="caption">Fig 4. Comprobación correcta de la GPU NVIDIA.</p>
+            </div>
+
+            <h3>Instalación de PyTorch y Dependencias</h3>
+            <p>Instalamos PyTorch con soporte para CUDA 12.1 y las dependencias necesarias para Axolotl.</p>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/instalacionPytorch.png" alt="Instalación PyTorch">
+                <p class="caption">Fig 5. Instalación de PyTorch.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/instalacion_pytorch_cuda121.png" alt="CUDA 12.1">
+                <p class="caption">Fig 6. Verificación de versión CUDA.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/instalacion_paquetes_conda_axolotl.png" alt="Paquetes Axolotl">
+                <p class="caption">Fig 7. Instalación de paquetes para Axolotl.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>4. Informe Técnico: Incompatibilidad Hardware "Bleeding Edge"</h2>
+
+            <div class="alert">
+                <strong>Dispositivo:</strong> NVIDIA GeForce RTX 5060 Ti<br>
+                <strong>Arquitectura:</strong> Blackwell (sm_120)<br>
+                <strong>Entorno:</strong> WSL2 (Ubuntu 24.04) sobre Windows 11<br>
+                <strong>Estado Final:</strong> Inviable por falta de soporte de Kernel CUDA.
+            </div>
+
+            <h3>📅 Fase 1: El conflicto del Entorno Base (Python 3.12)</h3>
+            <p>El sistema operativo (Ubuntu 24.04) traía por defecto Python 3.12, lo que desencadenó problemas de
+                compatibilidad binaria.</p>
+
+            <h4>1.1. Error de CMake y Versión de CUDA</h4>
+            <div class="alert">
+                <code>CMake Error: You've specified CUDA version 124 however the CUDA compiler found is 120.</code>
+            </div>
+            <p><strong>Causa:</strong> bitsandbytes intentaba compilarse desde el código fuente porque no encontraba
+                binarios pre-compilados para Python 3.12.</p>
+            <p><strong>Solución (Variable Injection):</strong> Forzamos las variables de entorno para engañar al
+                compilador cmake:</p>
+            <pre><code>export BNB_CUDA_VERSION=120
+cmake -DCOMPUTE_BACKEND=cuda -DCUDA_VERSION=120 .</code></pre>
+
+            <h4>1.2. Fallo de Compilación C++</h4>
+            <p>El código fuente de bitsandbytes (v0.42) tenía definiciones de tipos de datos incompatibles con los
+                headers modernos de CUDA 12.8.</p>
+
+            <h4>1.3. El "Frankenstein" de Librerías</h4>
+            <p>Se intentó inyectar un archivo binario <code>.so</code> válido de una versión antigua renombrándolo, pero
+                el sistema detectaba la discrepancia de símbolos.</p>
+
+            <h3>📅 Fase 2: Reingeniería del Entorno (Downgrade a Python 3.10)</h3>
+            <p>Debido a la inestabilidad de Python 3.12, se procedió a montar un entorno paralelo con Python 3.10.</p>
+
+            <h4>Solución a ausencia de distutils y Dependency Hell</h4>
+            <pre><code>sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install python3.10-distutils python3.10-dev
+pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+pip install "unsloth[...] @ git+..." --no-deps</code></pre>
+
+            <h3>📅 Fase 3: La Batalla del Enlazado Dinámico (WSL vs Python)</h3>
+            <div class="alert">
+                <code>ImportError: .../libcusparse.so.12: undefined symbol: __nvJitLinkComplete_12_4</code>
+            </div>
+            <p><strong>Causa Crítica:</strong> Linux cargaba las librerías de sistema de WSL antes que las librerías
+                modernas de Python.</p>
+            <p><strong>Solución:</strong> Reordenamiento de <code>LD_LIBRARY_PATH</code> para priorizar el entorno
+                virtual.</p>
+
+            <h3>📅 Fase 4: Incompatibilidad de Arquitectura (RTX 5060 Ti)</h3>
+            <p>Con el software comunicándose, el problema pasó al hardware físico (Arquitectura Blackwell sm_120).</p>
+
+            <h4>4.1. Error de Atributo int1</h4>
+            <p>Se eliminó la librería experimental <code>torchao</code> que causaba conflictos con PyTorch 2.5.1.</p>
+
+            <h4>4.2. Arquitectura No Soportada (sm_120)</h4>
+            <div class="alert">
+                <code>NVIDIA GeForce RTX 5060 Ti with CUDA capability sm_120 is not compatible with the current PyTorch installation.</code>
+            </div>
+            <p><strong>Solución (Spoofing):</strong> Engañamos a PyTorch para que tratara a la 5060 Ti como una H100
+                (sm_90):</p>
+            <pre><code>export TORCH_CUDA_ARCH_LIST="9.0"</code></pre>
+
+            <h4>4.3. Falta de Kernel Binario (El Fin del Camino)</h4>
+            <div class="alert"
+                style="border-color: #ff7b72; background-color: rgba(255, 123, 114, 0.1); color: #ff7b72;">
+                <strong>FATAL ERROR:</strong> RuntimeError: CUDA error: no kernel image is available for execution on
+                the device
+            </div>
+            <p>A pesar de engañar al software, al intentar ejecutar operaciones matemáticas reales, el driver buscó el
+                código binario para <strong>sm_120</strong>, el cual no existe en PyTorch Stable (CUDA 12.4) ni es
+                estable en Nightly (CUDA 12.8).</p>
+
+            <h3>🛠️ Resumen de Manipulaciones</h3>
+            <ul class="steps-list">
+                <li><strong>Edición de Código:</strong> Parcheo de <code>__init__.py</code> de Unsloth.</li>
+                <li><strong>Inyección de Binarios:</strong> Spoofing de archivos <code>.so</code>.</li>
+                <li><strong>Variables de Entorno:</strong> <code>BNB_CUDA_VERSION</code>, <code>LD_LIBRARY_PATH</code>,
+                    <code>TORCH_CUDA_ARCH_LIST</code>.</li>
+                <li><strong>Gestión de Paquetes:</strong> Uso de flags <code>--no-deps</code> y repositorios mixtos.
+                </li>
+            </ul>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/aviso_compatibilidad_cuda_sm120_mistral.png" alt="Aviso Compatibilidad">
+                <p class="caption">Fig 8. Aviso de incompatibilidad detectado inicialmente.</p>
+            </div>
+
+            <p><strong>Conclusión:</strong> La RTX 5060 Ti es funcional a nivel hardware, pero el ecosistema de software
+                (PyTorch + Bitsandbytes + CUDA en WSL) tiene un retraso de implementación respecto al lanzamiento del
+                hardware "Bleeding Edge".</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 - Documentación Generada para ASI</p>
+    </footer>
+
+</body>
+
+</html>
