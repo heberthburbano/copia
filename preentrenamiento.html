@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrenamiento y Despliegue de LLM - Dev Blog</title>
+    <style>
+        :root {
+            --bg-body: #0d1117;
+            --text-main: #c9d1d9;
+            --text-heading: #ffffff;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --accent: #d2a8ff;
+            /* Reusing purple accent from finetuning for AI consistency */
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --code-bg: #22272e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--text-heading);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: #8b949e;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            color: var(--accent);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(210, 168, 255, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: var(--text-heading);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .image-container {
+            margin: 2rem 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .caption {
+            transform: translateY(10px);
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            background-color: rgba(110, 118, 129, 0.4);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 85%;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .alert {
+            background-color: rgba(210, 168, 255, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            color: #e2c0ff;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .steps-list {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .steps-list li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="index.html" class="back-link">← Volver al inicio</a>
+        <br><br>
+        <h1>Entrenamiento y Despliegue de LLM Local</h1>
+        <span class="date">Publicado: 05 de Febrero, 2026</span>
+        <p>Entrenar un Modelo de Lenguaje (LLM) desde cero con "El Quijote", convertirlo a GGUF y ejecutarlo en LM
+            Studio.</p>
+    </header>
+
+    <main>
+
+        <section>
+            <h2>1. Configuración del Entorno de Alto Rendimiento</h2>
+            <p><strong>Hardware:</strong> NVIDIA GeForce RTX 4070 (12GB VRAM)<br>
+                <strong>OS:</strong> Windows 11 + WSL2 (Ubuntu 24.04)
+            </p>
+
+            <p>Para aprovechar la aceleración por hardware de la RTX 4070, se utilizó WSL2 debido a su mejor gestión de
+                memoria y compatibilidad con herramientas de IA.</p>
+
+            <h3>1.1 Instalación de WSL2 y Dependencias</h3>
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_1_Configuracion_Entorno_Inicial.png" alt="Configuración Entorno">
+                <p class="caption">Fig 1. Configuración inicial del entorno en WSL2.</p>
+            </div>
+
+            <h3>1.2 Gestión de Entornos Python</h3>
+            <p>Debido al error <code>externally-managed-environment</code> en Ubuntu moderno, utilizamos entornos
+                virtuales (venv).</p>
+            <pre><code>python3 -m venv venv
+source venv/bin/activate</code></pre>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_1_Creacion_Venv.png" alt="Creación Venv">
+                <p class="caption">Fig 2. Creación y activación del entorno virtual.</p>
+            </div>
+
+            <h3>1.3 Instalación de PyTorch con CUDA</h3>
+            <p>Instalación específica para habilitar la GPU:</p>
+            <pre><code>pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121</code></pre>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_1_Instalacion_PyTorch_CUDA.png" alt="Instalación PyTorch CUDA">
+                <p class="caption">Fig 3. Instalación de PyTorch con soporte CUDA.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>2. Fase 1: Entrenamiento Educativo (NanoGPT)</h2>
+            <p>Primer entrenamiento utilizando una arquitectura Transformer "artesanal" (NanoGPT) para comprender
+                conceptos fundamentales.</p>
+
+            <p><strong>Configuración:</strong> Batch size 64, contexto 256 tokens.</p>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_2_Inicio_Entrenamiento_NanoGPT.png" alt="Inicio NanoGPT">
+                <p class="caption">Fig 4. Inicio del proceso de entrenamiento.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_2_Monitoreo_GPU_NanoGPT.png" alt="Monitoreo GPU">
+                <p class="caption">Fig 5. Monitoreo de recursos de GPU durante el entrenamiento.</p>
+            </div>
+
+            <p>El modelo aprendió a estructurar palabras estilo castellano antiguo, aunque esta arquitectura no era
+                exportable a GGUF.</p>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_2_Generacion_Texto_NanoGPT.png" alt="Generación Texto">
+                <p class="caption">Fig 6. Generación de texto al finalizar la fase educativa.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>3. Fase 2: Entrenamiento para Producción (GPT-2)</h2>
+            <p>Migración a arquitectura estándar (GPT-2) con librería <code>transformers</code> para permitir la
+                exportación.</p>
+
+            <h3>Retos y Soluciones</h3>
+            <ul>
+                <li><strong>Error TextDataset:</strong> Se implementó <code>MiDatasetDeTexto(Dataset)</code>
+                    personalizado.</li>
+                <li><strong>Limpieza de output:</strong> Script con <code>shutil</code> para limpiar carpetas antes de
+                    entrenar.</li>
+            </ul>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_3_Instalacion_Librerias_HF.png" alt="Librerías HF">
+                <p class="caption">Fig 7. Instalación y configuración de librerías HuggingFace.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>4. Fase 3: Compilación y Conversión (Llama.cpp)</h2>
+            <p>Conversión del modelo a formato GGUF optimizado para inferencia local.</p>
+
+            <h3>4.1 Compilación</h3>
+            <p>Se compilaron las herramientas C++ usando <code>cmake</code>.</p>
+            <pre><code>cmake -B build
+cmake --build build --config Release -j 8</code></pre>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_4_Instalacion_Herramientas_Compilacion.png" alt="Compilación tools">
+                <p class="caption">Fig 8. Instalación de herramientas de compilación.</p>
+            </div>
+
+            <h3>4.2 Generación GGUF</h3>
+            <p>Conversión exitosa del modelo HuggingFace a GGUF.</p>
+            <pre><code>python3 convert_hf_to_gguf.py ../modelo_quijote_hf --outfile ../quijote.gguf</code></pre>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_4_Verificacion_Modelo_GGUF_Terminal.png" alt="Verificación GGUF">
+                <p class="caption">Fig 9. Verificación del modelo GGUF generado en terminal.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>5. Fase 4: Despliegue en LM Studio</h2>
+            <p>El paso final fue mover el archivo <code>quijote.gguf</code> a Windows y ejecutarlo en LM Studio.</p>
+            <div class="alert">
+                <strong>Nota de Seguridad:</strong> Windows bloqueó inicialmente el archivo. Fue necesario añadir
+                excepciones en Windows Defender para la carpeta <code>.lmstudio</code>.
+            </div>
+        </section>
+
+        <section>
+            <h2>6. Conclusión</h2>
+            <p>El modelo <strong>Cervantes-GPT</strong> es funcional, capaz de autocompletar texto con el estilo del
+                Siglo de Oro. Se ha completado el ciclo MLOps: Datos -> Entrenamiento -> Validación -> Conversión ->
+                Despliegue.</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 - Publicado con GitHub Pages</p>
+    </footer>
+
+</body>
+
+</html>
