@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Finanzas PWA - Dev Blog</title>
+    <style>
+        :root {
+            --bg-body: #0d1117;
+            --text-main: #c9d1d9;
+            --text-heading: #ffffff;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --accent: #3fb950; /* Green for PWA/Mobile */
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --code-bg: #22272e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 { color: var(--text-heading); font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .date { font-size: 0.9rem; color: #8b949e; margin-bottom: 1rem; display: block; }
+
+        section { margin-bottom: 3rem; }
+
+        h2 {
+            color: var(--accent);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(63, 185, 80, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 { color: var(--text-heading); font-size: 1.3rem; margin: 1.5rem 0 1rem; }
+        h4 { color: var(--accent); font-size: 1.1rem; margin: 1.2rem 0 0.8rem; }
+
+        p { margin-bottom: 1rem; }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        li { margin-bottom: 0.4rem; }
+
+        .image-container {
+            margin: 2rem 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .caption {
+            transform: translateY(10px);
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            background-color: rgba(110, 118, 129, 0.4);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 85%;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .alert {
+            background-color: rgba(63, 185, 80, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            color: #a5d6a7;
+        }
+
+        .alert.red {
+            background-color: rgba(248, 81, 73, 0.1);
+            border-color: #f85149;
+            color: #ffa7a3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: rgba(63, 185, 80, 0.1);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 2rem;
+            color: var(--text-heading);
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        .file-tree {
+            background-color: var(--code-bg);
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 1.5rem 0;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            color: var(--text-main);
+            overflow-x: auto;
+        }
+
+        .file-tree .folder { color: var(--accent); }
+        .file-tree .comment { color: #8b949e; }
+
+        .flow-diagram {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .flow-diagram .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .flow-diagram .flow-box {
+            background-color: rgba(63, 185, 80, 0.15);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            color: var(--text-heading);
+            white-space: nowrap;
+        }
+
+        .flow-diagram .flow-box.main {
+            background-color: rgba(63, 185, 80, 0.3);
+            font-weight: bold;
+        }
+
+        .flow-diagram .arrow {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        .phase-block {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .phase-block blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #8b949e;
+            font-style: italic;
+        }
+
+        .roadmap-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .roadmap-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.8rem;
+            position: relative;
+        }
+
+        .roadmap-list li::before {
+            position: absolute;
+            left: 0;
+            font-size: 1rem;
+        }
+
+        .roadmap-list li.done::before { content: "✅"; }
+        .roadmap-list li.pending::before { content: "⬜"; }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover { text-decoration: underline; }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.85rem;
+            color: #484f58;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-link">← Volver al inicio</a>
+        <br><br>
+        <h1>App de Finanzas Personales (PWA)</h1>
+        <span class="date">Publicado: Febrero, 2026</span>
+        <p>Documentación técnica de una Aplicación Web Progresiva para gestión de gastos, instalable como app nativa y con funcionamiento offline.</p>
+    </header>
+
+    <main>
+
+        <!-- Sección 1: Introducción -->
+        <section>
+            <h2>1. Introducción y Objetivos</h2>
+            <p>Desarrollo de una <strong>Aplicación Web Progresiva (PWA)</strong> para la gestión de gastos personales. El objetivo principal fue crear una herramienta ligera, accesible desde cualquier dispositivo y con capacidad de instalación nativa, sin depender de frameworks pesados.</p>
+
+            <h3>Características Clave</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value">SPA</span>
+                    <span class="stat-label">Arquitectura Single Page App con enrutamiento hash</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">📱</span>
+                    <span class="stat-label">Mobile-First con tema oscuro</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">☁️</span>
+                    <span class="stat-label">Persistencia con Supabase (PostgreSQL + Auth)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">📴</span>
+                    <span class="stat-label">Offline con Service Worker (Cache First)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">🌐</span>
+                    <span class="stat-label">i18n: Español e Inglés</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">📄</span>
+                    <span class="stat-label">Exportación CSV y PDF</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección 2: Stack Tecnológico -->
+        <section>
+            <h2>2. Stack Tecnológico</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Capa</th>
+                        <th>Tecnología</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Frontend</strong></td><td>HTML5, CSS3 (Variables nativas, Dark Mode), JavaScript Vanilla ES6+</td></tr>
+                    <tr><td><strong>Backend / BaaS</strong></td><td>Supabase (PostgreSQL + Auth + Storage)</td></tr>
+                    <tr><td><strong>Visualización</strong></td><td>Chart.js (Gráficos de donut/barra)</td></tr>
+                    <tr><td><strong>Iconografía</strong></td><td>Font Awesome 6.4</td></tr>
+                    <tr><td><strong>PDF</strong></td><td>jsPDF + jsPDF-AutoTable</td></tr>
+                    <tr><td><strong>Tipografía</strong></td><td>Google Fonts (Outfit)</td></tr>
+                    <tr><td><strong>Hosting</strong></td><td>GitHub Pages</td></tr>
+                    <tr><td><strong>Empaquetado</strong></td><td>PWABuilder (Generación de APK vía TWA)</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Sección 3: Arquitectura -->
+        <section>
+            <h2>3. Arquitectura de la Solución</h2>
+
+            <h3>3.1. Estructura de Archivos</h3>
+            <p>El proyecto sigue una arquitectura <strong>modular con clases globales</strong>, donde cada módulo se expone vía <code>window.*</code> para facilitar la comunicación entre componentes sin bundler:</p>
+
+            <div class="file-tree">
+                <span class="folder">finanzas/</span><br>
+                ├── index.html <span class="comment"># Punto de entrada único (SPA)</span><br>
+                ├── style.css <span class="comment"># Estilos globales, temas, responsive</span><br>
+                ├── manifest.json <span class="comment"># Configuración PWA (nombre, iconos, orientación)</span><br>
+                ├── sw.js <span class="comment"># Service Worker (Cache First / Network Only)</span><br>
+                │<br>
+                ├── main.js <span class="comment"># Lógica principal e inicialización</span><br>
+                ├── router.js <span class="comment"># Hash Router (navegación SPA)</span><br>
+                ├── authManager.js <span class="comment"># Gestión de autenticación (Supabase Auth)</span><br>
+                ├── transactionManager.js <span class="comment"># CRUD de transacciones + Upload de recibos</span><br>
+                ├── categoryManager.js <span class="comment"># CRUD de categorías personalizadas</span><br>
+                ├── chartManager.js <span class="comment"># Configuración y renderizado de Chart.js</span><br>
+                ├── currencyService.js <span class="comment"># Conversión de divisas (API externa)</span><br>
+                ├── pdfService.js <span class="comment"># Generación de informes PDF</span><br>
+                ├── toast.js <span class="comment"># Sistema de notificaciones Toast</span><br>
+                ├── i18n.js <span class="comment"># Internacionalización (ES/EN)</span><br>
+                ├── supabaseClient.js <span class="comment"># Inicialización del cliente Supabase</span><br>
+                │<br>
+                ├── <span class="folder">assets/</span><br>
+                │&nbsp;&nbsp;&nbsp;├── icon-192.png <span class="comment"># Icono PWA (192x192)</span><br>
+                │&nbsp;&nbsp;&nbsp;└── icon-512.png <span class="comment"># Icono PWA (512x512)</span><br>
+                │<br>
+                └── <span class="folder">documentacion/</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;├── documentacion.md<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;└── <span class="folder">capturas/</span>
+            </div>
+
+            <h3>3.2. Módulos y Responsabilidades</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Clase/Función</th>
+                        <th>Responsabilidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>supabaseClient.js</code></td><td>—</td><td>Inicializa el cliente Supabase y lo expone como <code>window.supabaseClient</code></td></tr>
+                    <tr><td><code>authManager.js</code></td><td><code>AuthManager</code></td><td><code>signUp()</code>, <code>signIn()</code>, <code>signOut()</code>, <code>getUser()</code>, <code>onAuthStateChange()</code></td></tr>
+                    <tr><td><code>transactionManager.js</code></td><td><code>TransactionManager</code></td><td><code>init()</code>, <code>add()</code>, <code>remove()</code>, <code>update()</code>, <code>uploadReceipt()</code>, <code>exportToCSV()</code>, <code>getSummary()</code></td></tr>
+                    <tr><td><code>categoryManager.js</code></td><td><code>CategoryManager</code></td><td><code>init()</code>, <code>createDefaults()</code>, <code>add()</code>, <code>remove()</code>, <code>getAll()</code></td></tr>
+                    <tr><td><code>chartManager.js</code></td><td><code>ChartManager</code></td><td>Renderiza gráficos de donut por categoría con filtros temporales</td></tr>
+                    <tr><td><code>currencyService.js</code></td><td><code>CurrencyService</code></td><td><code>getRate(from, to)</code> — Conversión de divisas vía API pública</td></tr>
+                    <tr><td><code>pdfService.js</code></td><td><code>PDFService</code></td><td><code>generatePDF()</code> — Informe financiero filtrado por categorías</td></tr>
+                    <tr><td><code>i18n.js</code></td><td><code>TranslationManager</code></td><td><code>t(key)</code>, <code>setLanguage()</code>, <code>updateView()</code> — Diccionario ES/EN</td></tr>
+                    <tr><td><code>router.js</code></td><td><code>Router</code></td><td>Navegación hash-based con guardias de visibilidad (nav/FAB)</td></tr>
+                    <tr><td><code>toast.js</code></td><td><code>showToast()</code></td><td>Notificaciones tipo toast con auto-dismiss</td></tr>
+                    <tr><td><code>sw.js</code></td><td>Service Worker</td><td>Cache First para App Shell, Network Only para API Supabase</td></tr>
+                    <tr><td><code>main.js</code></td><td>—</td><td>Orquestador: inicializa managers, configura eventos, renderiza UI</td></tr>
+                </tbody>
+            </table>
+
+            <h3>3.3. Diseño de Base de Datos (Supabase)</h3>
+            <p>Se implementaron dos tablas principales con <strong>Row Level Security (RLS)</strong> para garantizar que cada usuario solo acceda a sus propios datos:</p>
+
+            <h4>Tabla <code>transactions</code></h4>
+            <table>
+                <thead>
+                    <tr><th>Columna</th><th>Tipo</th><th>Descripción</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
+                    <tr><td><code>user_id</code></td><td>UUID (FK)</td><td>Referencia al usuario autenticado</td></tr>
+                    <tr><td><code>title</code></td><td>TEXT</td><td>Concepto del movimiento</td></tr>
+                    <tr><td><code>amount</code></td><td>NUMERIC</td><td>Cantidad en EUR</td></tr>
+                    <tr><td><code>type</code></td><td>TEXT</td><td><code>income</code> o <code>expense</code></td></tr>
+                    <tr><td><code>category</code></td><td>TEXT</td><td>Nombre de la categoría</td></tr>
+                    <tr><td><code>date</code></td><td>TIMESTAMP</td><td>Fecha del movimiento</td></tr>
+                    <tr><td><code>receipt_url</code></td><td>TEXT</td><td>URL pública del recibo adjunto (opcional)</td></tr>
+                </tbody>
+            </table>
+
+            <h4>Tabla <code>categories</code></h4>
+            <table>
+                <thead>
+                    <tr><th>Columna</th><th>Tipo</th><th>Descripción</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
+                    <tr><td><code>user_id</code></td><td>UUID (FK)</td><td>Referencia al usuario</td></tr>
+                    <tr><td><code>name</code></td><td>TEXT</td><td>Nombre de la categoría</td></tr>
+                    <tr><td><code>icon</code></td><td>TEXT</td><td>Clase FontAwesome (ej: <code>fa-tag</code>)</td></tr>
+                    <tr><td><code>color</code></td><td>TEXT</td><td>Color hexadecimal (ej: <code>#6366f1</code>)</td></tr>
+                </tbody>
+            </table>
+
+            <h4>Storage Bucket <code>receipts</code></h4>
+            <ul>
+                <li>Almacena recibos e imágenes adjuntas a transacciones.</li>
+                <li>Ruta: <code>{user_id}/{timestamp}.{ext}</code> (nombre sanitizado).</li>
+                <li>Validación: solo imágenes (JPEG, PNG, WEBP, GIF) y PDF, máximo 5MB.</li>
+            </ul>
+
+            <h3>3.4. Flujo de la Aplicación</h3>
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-box main">index.html</div>
+                </div>
+                <div class="flow-row">
+                    <span class="arrow">↓</span>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box">supabaseClient.js</div>
+                    <span class="arrow">→</span>
+                    <div class="flow-box">authManager.js</div>
+                </div>
+                <div class="flow-row">
+                    <span class="arrow">↓</span>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box main">main.js (Orquestador)</div>
+                </div>
+                <div class="flow-row">
+                    <span class="arrow">↙</span>
+                    <span class="arrow">↓</span>
+                    <span class="arrow">↘</span>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box">transactionManager</div>
+                    <div class="flow-box">categoryManager</div>
+                    <div class="flow-box">chartManager</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box">currencyService</div>
+                    <div class="flow-box">pdfService</div>
+                    <div class="flow-box">i18n</div>
+                    <div class="flow-box">toast</div>
+                </div>
+                <div class="flow-row" style="margin-top: 1.5rem;">
+                    <div class="flow-box">router.js</div>
+                    <span class="arrow">⇄</span>
+                    <div class="flow-box">sw.js (Service Worker)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección 4: Ingeniería de Prompts -->
+        <section>
+            <h2>4. Ingeniería de Prompts (Metodología)</h2>
+            <p>El desarrollo se guio mediante <strong>"Role Prompting"</strong> con un Agente de IA, iterando en fases:</p>
+
+            <div class="phase-block">
+                <h3>Fase 1: Estructura y Lógica Core</h3>
+                <blockquote>
+                    "Actúa como un experto en JavaScript. Crea una estructura SPA básica con un Router que maneje vistas (Login, Home, Add). Conecta con Supabase para autenticación."
+                </blockquote>
+                <p><strong>Resultado:</strong> Base funcional con sistema de login, registro, navegación hash-based y persistencia en Supabase.</p>
+            </div>
+
+            <div class="phase-block">
+                <h3>Fase 2: Visualización de Datos</h3>
+                <blockquote>
+                    "Integra Chart.js para mostrar un gráfico de donut con los gastos por categoría. Los colores deben coincidir con la paleta CSS definida."
+                </blockquote>
+                <p><strong>Resultado:</strong> Dashboard visual con métricas en tiempo real (Balance, Ingresos, Gastos), gráfico de donut con filtros temporales (Hoy, 7 Días, Este Mes, 3 Meses, Todo).</p>
+            </div>
+
+            <div class="phase-block">
+                <h3>Fase 3: Refactorización Mobile-Native (UX)</h3>
+                <p>Basada en documentación de ergonomía móvil (Regla de las 3C, Zona del Pulgar).</p>
+                <blockquote>
+                    "Refactoriza la interfaz para móvil. Convierte la tabla de transacciones en Tarjetas (Cards). Implementa un Bottom Navigation Bar y mueve los modales a Bottom Sheets."
+                </blockquote>
+                <p><strong>Resultado:</strong> Transformación de una web de escritorio a una experiencia de app nativa.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/documentacion_PWA/captura1_dashboard_movil.png" alt="Dashboard principal en móvil mostrando el balance, gráfico de donut y la barra de navegación inferior">
+                <p class="caption">Fig 1. Dashboard en móvil: balance, gráfico de donut y barra de navegación inferior.</p>
+            </div>
+
+            <div class="phase-block">
+                <h3>Fase 4: Conversión a PWA y Offline</h3>
+                <blockquote>
+                    "Genera un Service Worker con estrategia 'Cache First' para la interfaz y 'Network Only' para la API de Supabase. Crea el manifest.json para permitir la instalación en Android."
+                </blockquote>
+                <p><strong>Resultado:</strong> App instalable y funcional offline (interfaz). Service Worker con estrategia dual: caché instantánea para el App Shell y datos siempre frescos desde Supabase.</p>
+            </div>
+        </section>
+
+        <!-- Sección 5: Troubleshooting -->
+        <section>
+            <h2>5. Desafíos Técnicos y Soluciones</h2>
+            <p>Durante el desarrollo surgieron problemas críticos que se resolvieron mediante depuración lógica:</p>
+
+            <h3>🔴 Problema 1: "Z-Index War" en Móvil</h3>
+            <table>
+                <tbody>
+                    <tr><td><strong>Síntoma</strong></td><td>El botón flotante (+) no funcionaba en móvil aunque era visible.</td></tr>
+                    <tr><td><strong>Causa</strong></td><td>La barra de navegación tenía un área transparente (padding) que se superponía al botón.</td></tr>
+                    <tr><td><strong>Solución</strong></td><td>Se aplicó <code>z-index: 2000</code> al botón y se ajustó su posición <code>bottom</code> usando <code>calc(80px + env(safe-area-inset-bottom))</code> para respetar el área segura del iPhone.</td></tr>
+                </tbody>
+            </table>
+
+            <h3>🔴 Problema 2: Fuga de Seguridad Visual</h3>
+            <table>
+                <tbody>
+                    <tr><td><strong>Síntoma</strong></td><td>La barra de navegación aparecía en la pantalla de Login.</td></tr>
+                    <tr><td><strong>Solución</strong></td><td>Se implementó un "Guardia de Navegación" en el Router:</td></tr>
+                </tbody>
+            </table>
+            <pre><code>// router.js - render()
+if (route === 'login') {
+    nav.style.display = 'none';
+    fabContainer.style.display = 'none';
+}</code></pre>
+
+            <div class="image-container">
+                <img src="asi/documentacion_PWA/captura2_login_limpio.png" alt="Pantalla de Login limpia sin barras de navegación, solo el formulario de autenticación">
+                <p class="caption">Fig 2. Login limpio: sin barra de navegación, solo el formulario de autenticación.</p>
+            </div>
+
+            <h3>🔴 Problema 3: Error CORS en Producción</h3>
+            <table>
+                <tbody>
+                    <tr><td><strong>Síntoma</strong></td><td><code>Failed to fetch</code> al usar la app desde el móvil (GitHub Pages).</td></tr>
+                    <tr><td><strong>Causa</strong></td><td>Supabase bloqueaba las peticiones desde el dominio <code>github.io</code>.</td></tr>
+                    <tr><td><strong>Solución</strong></td><td>Configuración de "Site URL" y "Redirect URLs" en el panel de autenticación de Supabase.</td></tr>
+                </tbody>
+            </table>
+
+            <h3>🔴 Problema 4: Confusión de UX en Ajustes</h3>
+            <table>
+                <tbody>
+                    <tr><td><strong>Síntoma</strong></td><td>Dos botones <code>+</code> en la pantalla de Configuración causaban confusión.</td></tr>
+                    <tr><td><strong>Solución</strong></td><td>Ocultar el FAB global en la vista <code>settings</code> (en el Router) y rediseñar el botón de "Crear Categoría" como un bloque estático superior de ancho completo.</td></tr>
+                </tbody>
+            </table>
+
+            <div class="image-container">
+                <img src="asi/documentacion_PWA/captura3_gestion_categorias.png" alt="Pantalla de Gestión de Categorías con botón rectangular Nueva Categoría y sin botón flotante">
+                <p class="caption">Fig 3. Gestión de Categorías: botón estático "Nueva Categoría", sin FAB flotante.</p>
+            </div>
+
+            <h3>🔴 Problema 5: Upload falla en Móvil</h3>
+            <table>
+                <tbody>
+                    <tr><td><strong>Síntoma</strong></td><td><code>Failed to fetch</code> solo en móvil al subir una imagen.</td></tr>
+                    <tr><td><strong>Causa</strong></td><td>Nombres de archivo con caracteres especiales generados por cámaras móviles + fotos demasiado grandes.</td></tr>
+                    <tr><td><strong>Solución</strong></td><td>Método <code>uploadReceipt()</code> centralizado con: validación de tipo (solo imágenes/PDF), límite de 5MB, y nombre sanitizado (<code>{user_id}/{timestamp}.{ext}</code>).</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Sección 6: Deploy -->
+        <section>
+            <h2>6. Proceso de Despliegue (Deploy)</h2>
+            <p>El despliegue sigue una pipeline de 3 pasos:</p>
+            <ol>
+                <li><strong>Git:</strong> Control de versiones y push a rama <code>main</code>.</li>
+                <li><strong>GitHub Pages:</strong> Hosting estático automático desde el repositorio.</li>
+                <li><strong>PWABuilder:</strong>
+                    <ul>
+                        <li>Análisis del <code>manifest.json</code> y <code>sw.js</code>.</li>
+                        <li>Generación de <strong>Trusted Web Activity (TWA)</strong> para Android.</li>
+                        <li>Compilación de archivo <code>.apk</code> firmado.</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <div class="image-container">
+                <img src="asi/documentacion_PWA/captura4_app_instalada_movil.jpeg" alt="Menú de aplicaciones del móvil mostrando el icono de Finanzas junto a otras apps">
+                <p class="caption">Fig 4. App instalada en el dispositivo móvil: icono "Finanzas" junto a otras apps nativas.</p>
+            </div>
+        </section>
+
+        <!-- Sección 7: Conclusión -->
+        <section>
+            <h2>7. Conclusión y Futuras Mejoras</h2>
+            <p>El proyecto ha resultado en una aplicación financiera <strong>robusta, segura y con una experiencia de usuario nativa</strong>. Se ha demostrado que es posible crear una app completa y visualmente atractiva usando solo tecnologías web estándar (sin React, Vue, ni frameworks CSS).</p>
+
+            <h3>Roadmap (Próximos Pasos)</h3>
+            <ul class="roadmap-list">
+                <li class="done">Implementar API de conversión de divisas (EUR, USD, GBP).</li>
+                <li class="done">Service Worker para funcionamiento offline.</li>
+                <li class="done">Detección de conectividad (online/offline) con feedback visual.</li>
+                <li class="pending">Modo Oscuro automático según preferencias del sistema (<code>prefers-color-scheme</code>).</li>
+                <li class="pending">Notificaciones push para recordatorios de gastos.</li>
+                <li class="pending">Presupuestos mensuales por categoría con alertas de límite.</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 - Documentación Generada para ASI</p>
+    </footer>
+
+</body>
+</html>
