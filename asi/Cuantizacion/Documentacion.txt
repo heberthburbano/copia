@@ -1,0 +1,102 @@
+Guía Técnica: Cuantización de Modelos LLM (Microsoft Phi-3)
+Fecha: 14 de Febrero, 2026
+Objetivo: Descargar el modelo Microsoft Phi-3 Mini, convertirlo a formato GGUF y aplicar técnicas de cuantización (compresión) para optimizar su inferencia en hardware de consumo.
+Herramientas: llama.cpp, Python 3.12, CMake.
+
+1. Configuración del Entorno de Trabajo
+El primer paso asegura un entorno aislado y limpio para evitar conflictos entre librerías de Python y herramientas del sistema.
+
+1.1 Preparación de Directorios y Herramientas
+Ejecuta los siguientes comandos en tu terminal (WSL2/Linux) para establecer la estructura del proyecto:
+
+Bash
+
+# 1. Crear directorio del proyecto y navegar a él
+mkdir proyecto_phi3
+cd proyecto_phi3
+
+# 2. Clonar el repositorio oficial de llama.cpp
+git clone https://github.com/ggerganov/llama.cpp.git
+
+# 3. Crear entorno virtual (venv) para aislar dependencias
+python3 -m venv venv
+
+# 4. Activar el entorno
+source venv/bin/activate
+1.2 Instalación de Dependencias
+Es necesario instalar las librerías para la gestión de tensores y la descarga desde HuggingFace.
+
+Bash
+
+# Actualizar gestor de paquetes
+pip install --upgrade pip
+
+# Instalar librerías requeridas (Incluyendo huggingface_hub para la descarga)
+pip install numpy sentencepiece transformers gguf huggingface_hub cmake
+2. Compilación del Motor (llama.cpp)
+Compilaremos el código fuente C++ para generar los binarios de conversión y cuantización.
+
+Bash
+
+cd llama.cpp
+
+# 1. Configurar la construcción (Build System)
+cmake -B build
+
+# 2. Compilar los ejecutables en modo 'Release' (Optimizado)
+cmake --build build --config Release -j 8
+Nota: Al finalizar, verifica que existe el archivo llama-quantize en la ruta build/bin/.
+
+3. Adquisición del Modelo (Phi-3-Mini)
+Descargaremos los pesos originales del modelo sin necesidad de instalar git-lfs, utilizando un script de Python directo.
+
+Vuelve al directorio raíz del proyecto:
+
+Bash
+
+cd ..
+Ejecuta el siguiente comando para descargar el modelo:
+
+Bash
+
+python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='microsoft/Phi-3-mini-4k-instruct', local_dir='Phi-3-mini-4k-instruct', local_dir_use_symlinks=False)"
+Verificación: Confirma que la descarga es correcta (aprox. 7.6 GB):
+
+Bash
+
+du -sh Phi-3-mini-4k-instruct
+4. Conversión y Cuantización
+Esta es la fase crítica donde transformamos el modelo para que sea ejecutable localmente.
+
+4.1 Paso 1: Conversión a GGUF (FP16)
+Primero, transformamos el formato de HuggingFace (tensores sueltos) a un único archivo GGUF en Media Precisión (FP16). Este archivo es una copia exacta pero en otro formato, sin pérdida de calidad ni compresión.
+
+Bash
+
+python3 llama.cpp/convert_hf_to_gguf.py ./Phi-3-mini-4k-instruct --outfile phi-3-fp16.gguf --outtype f16
+4.2 Paso 2: Cuantización a 4-bits (Compresión)
+Utilizamos la herramienta compilada anteriormente para reducir el tamaño del modelo. Usaremos el método q4_k_m, que ofrece el mejor equilibrio entre tamaño y "inteligencia" del modelo.
+
+Bash
+
+./llama.cpp/build/bin/llama-quantize phi-3-fp16.gguf phi-3-mini-q4.gguf q4_k_m
+5. Verificación de Resultados
+Finalmente, comparamos los archivos resultantes para validar la optimización.
+
+Ejecuta:
+
+Bash
+
+ls -lh *.gguf
+Resultado esperado:
+
+phi-3-fp16.gguf: ~7.6 GB (Alta fidelidad, lento, mucha RAM).
+
+phi-3-mini-q4.gguf: ~2.5 GB (Optimizado, rápido, poca RAM).
+
+6. Despliegue
+El archivo phi-3-mini-q4.gguf ya está listo para producción.
+
+Destino: Copiar a la carpeta de modelos de LM Studio.
+
+Uso: Este modelo cuantizado permitirá ejecutar inferencia de alta velocidad con un consumo mínimo de VRAM.

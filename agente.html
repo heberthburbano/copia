@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica: Agente IA Local (Kilo Code + LM Studio) - Dev Blog</title>
+    <style>
+        :root {
+            --bg-body: #0d1117;
+            --text-main: #c9d1d9;
+            --text-heading: #ffffff;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --accent: #58a6ff;
+            /* Blue for agent/tooling */
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --code-bg: #22272e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--text-heading);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: #8b949e;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            color: var(--accent);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(88, 166, 255, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: var(--text-heading);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .image-container {
+            margin: 2rem 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .caption {
+            transform: translateY(10px);
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            background-color: rgba(110, 118, 129, 0.4);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 85%;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            background-color: rgba(88, 166, 255, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            color: #79c0ff;
+        }
+
+        .alert.success {
+            background-color: rgba(63, 185, 80, 0.1);
+            border-color: #3fb950;
+            color: #7ee787;
+        }
+
+        .alert.warning {
+            background-color: rgba(210, 153, 34, 0.1);
+            border-color: #d29922;
+            color: #e3b341;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 2rem;
+            color: var(--text-heading);
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .tool-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .tool-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tool-list li:last-child {
+            border-bottom: none;
+        }
+
+        .tool-list li strong {
+            color: var(--accent);
+        }
+
+        .diagram {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+            font-family: ui-monospace, monospace;
+            font-size: 0.95rem;
+            line-height: 2;
+        }
+
+        .diagram .arrow {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        .diagram .label {
+            color: #8b949e;
+            font-size: 0.8rem;
+        }
+
+        ol.steps {
+            margin: 1rem 0 1rem 1.5rem;
+            color: var(--text-main);
+        }
+
+        ol.steps li {
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.85rem;
+            color: #484f58;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="index.html" class="back-link">← Volver al inicio</a>
+        <br><br>
+        <h1>Agente IA Local con Kilo Code</h1>
+        <span class="date">Publicado: 14 de Febrero, 2026</span>
+        <p>Guía completa para configurar un agente de IA local como copiloto de código en Visual Studio Code,
+            conectando la extensión Kilo Code con LM Studio para inferencia 100% privada y offline.</p>
+    </header>
+
+    <main>
+
+        <!-- Sección 0: Resumen del Pipeline -->
+        <section>
+            <h2>Arquitectura del Sistema</h2>
+            <p>El flujo conecta tres componentes: VS Code como IDE, Kilo Code como extensión de agente IA, y LM Studio
+                como motor de inferencia local que sirve el modelo a través de una API OpenAI-compatible.</p>
+
+            <div class="diagram">
+                <strong>VS Code</strong> (Editor de código)
+                <br>
+                <span class="arrow">↓</span> <span class="label">Extensión instalada</span>
+                <br>
+                <strong>Kilo Code</strong> (Agente IA / Copiloto)
+                <br>
+                <span class="arrow">↓</span> <span class="label">API REST (http://127.0.0.1:1234)</span>
+                <br>
+                <strong>LM Studio</strong> (Servidor de inferencia local)
+                <br>
+                <span class="arrow">↓</span> <span class="label">Modelo cargado en RAM/GPU</span>
+                <br>
+                <strong>Qwen3-VL-4B</strong> (LLM cuantizado, 3.11 GB)
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value">100%</span>
+                    <span class="stat-label">Privado y Offline</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">3.11 GB</span>
+                    <span class="stat-label">Tamaño del Modelo</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">:1234</span>
+                    <span class="stat-label">Puerto del Servidor</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">M1 Max</span>
+                    <span class="stat-label">Hardware de Inferencia</span>
+                </div>
+            </div>
+
+            <ul class="tool-list">
+                <li><strong>IDE:</strong> Visual Studio Code</li>
+                <li><strong>Extensión:</strong> Kilo Code — AI Coding Agent, Copilot, and Autocomplete</li>
+                <li><strong>Motor:</strong> LM Studio 0.3.33 (Servidor local OpenAI-compatible)</li>
+                <li><strong>Modelo:</strong> Qwen3-VL-4B (4-bit, MLX, Vision Enabled)</li>
+                <li><strong>Conexión:</strong> HTTP REST en <code>http://127.0.0.1:1234</code></li>
+            </ul>
+        </section>
+
+        <!-- Sección 1: Instalación de la Extensión -->
+        <section>
+            <h2>1. Instalación de la Extensión Kilo Code</h2>
+            <p>El primer paso es instalar la extensión que actuará como copiloto de código directamente desde el
+                Marketplace de VS Code.</p>
+
+            <ol class="steps">
+                <li>Abrir VS Code y acceder al panel de <strong>Extensiones</strong> (Ctrl+Shift+X / Cmd+Shift+X).</li>
+                <li>Buscar <code>Kilo Code</code> en el Marketplace.</li>
+                <li>Seleccionar <strong>"Kilo Code: AI Coding agent, Copilot, and Autocomplete"</strong> e instalar.
+                </li>
+            </ol>
+
+            <div class="image-container">
+                <img src="asi/Agente/01_extension_kilo_marketplace.png"
+                    alt="Búsqueda de Kilo Code en el Marketplace de VS Code">
+                <p class="caption">Fig 1. Búsqueda de la extensión Kilo Code en el Marketplace de Visual Studio Code.
+                </p>
+            </div>
+        </section>
+
+        <!-- Sección 2: Registro y Autenticación -->
+        <section>
+            <h2>2. Registro y Autenticación</h2>
+            <p>Kilo Code requiere un registro inicial para activar la extensión. El proceso utiliza autenticación por
+                dispositivo con un código de verificación.</p>
+
+            <ol class="steps">
+                <li>Al abrir Kilo Code por primera vez, se muestra un diálogo de bienvenida con opciones de inicio de
+                    sesión.</li>
+                <li>Seleccionar <strong>"Sign In"</strong> o <strong>"Create Account"</strong>.</li>
+                <li>Se abre el navegador con un código de autorización que debemos confirmar.</li>
+                <li>Una vez autorizado, la extensión se activa automáticamente en VS Code.</li>
+            </ol>
+
+            <div class="image-container">
+                <img src="asi/Agente/03_inicio_sesion_qr.png" alt="Pantalla de inicio de sesión de Kilo Code">
+                <p class="caption">Fig 2. Pantalla de inicio de sesión de Kilo Code mostrando opciones de registro y
+                    código QR de autenticación.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Agente/05_autorizacion_exitosa.png" alt="Autorización exitosa del dispositivo">
+                <p class="caption">Fig 3. Confirmación de autorización exitosa: "Authorization Successful — You can now
+                    close this window".</p>
+            </div>
+        </section>
+
+        <!-- Sección 3: Configuración Inicial de Kilo -->
+        <section>
+            <h2>3. Configuración Inicial de Kilo Code</h2>
+            <p>Con la extensión activada, configuramos el modo de operación y el perfil del proveedor de API.</p>
+
+            <h3>3.1 Selección del Modo de Trabajo</h3>
+            <p>Kilo Code ofrece varios modos de operación. Para generación y modificación de código, seleccionamos el
+                modo <strong>"Code"</strong>:</p>
+
+            <div class="image-container">
+                <img src="asi/Agente/08_selector_modo_opciones.png" alt="Selector de modos de Kilo Code">
+                <p class="caption">Fig 4. Menú de selección de modos: Architect, <strong>Code</strong> (Write, modify,
+                    and refactor code), Ask, Debug, y Orchestrator. Se selecciona "Code".</p>
+            </div>
+
+            <h3>3.2 Configuración del Perfil y Proveedor de API</h3>
+            <p>En la pestaña de <strong>Settings → Providers</strong>, verificamos que el perfil
+                <code>default (Active)</code> está seleccionado y procedemos a cambiar el API Provider:
+            </p>
+
+            <div class="image-container">
+                <img src="asi/Agente/06_configuracion_perfil_default.png" alt="Configuración del perfil API Provider">
+                <p class="caption">Fig 5. Panel de ajustes de Kilo Code: Configuration Profile "default (Active)" y API
+                    Provider inicialmente en "Kilo Gateway".</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Agente/09_panel_proveedores_settings.png"
+                    alt="Panel completo de proveedores con Kilo Gateway">
+                <p class="caption">Fig 6. Vista completa del panel Providers mostrando la configuración por defecto con
+                    Kilo Gateway seleccionado.</p>
+            </div>
+
+            <h3>3.3 Cambio de Backend a LM Studio</h3>
+            <p>En el menú desplegable de <strong>API Provider</strong>, seleccionamos <code>LM Studio</code> para
+                redirigir las peticiones al servidor de inferencia local:</p>
+
+            <div class="image-container">
+                <img src="asi/Agente/10_dropdown_api_lmstudio.png" alt="Selección de LM Studio como proveedor de API">
+                <p class="caption">Fig 7. Menú desplegable de proveedores de API: se selecciona "LM Studio" entre las
+                    opciones disponibles (Groq, HuggingFace, Mistral, etc.).</p>
+            </div>
+
+            <div class="alert">
+                <strong>📋 Nota:</strong> Al seleccionar LM Studio, Kilo Code espera que el servidor esté corriendo en
+                <code>http://127.0.0.1:1234</code>. Si no se detecta conexión, mostrará un error de modelo inválido.
+            </div>
+        </section>
+
+        <!-- Sección 4: Configuración de LM Studio -->
+        <section>
+            <h2>4. Preparación de LM Studio</h2>
+            <p>LM Studio actúa como el motor de inferencia: carga el modelo en memoria y expone una API REST compatible
+                con OpenAI. Debemos asegurarnos de que un modelo esté cargado y el servidor activo.</p>
+
+            <h3>4.1 Vista del Servidor (Developer Mode)</h3>
+            <p>Al abrir LM Studio, accedemos a la pestaña <strong>Developer</strong> donde se muestra el estado del
+                servidor y los endpoints disponibles:</p>
+
+            <div class="image-container">
+                <img src="asi/Agente/11_lmstudio_servidor_detenido.png" alt="LM Studio con servidor detenido">
+                <p class="caption">Fig 8. LM Studio en modo Developer: servidor detenido ("Server not running"), sin
+                    modelos cargados. Se muestran los endpoints soportados: GET /v1/models, POST /v1/chat/completions,
+                    POST /v1/completions, POST /v1/embeddings.</p>
+            </div>
+
+            <h3>4.2 Activación del Servidor</h3>
+            <p>Cargamos un modelo (en este caso <code>qwen/qwen3-vl-4b</code>) y activamos el toggle de
+                <strong>Status</strong> para iniciar el servidor:
+            </p>
+
+            <div class="image-container">
+                <img src="asi/Agente/12_lmstudio_servidor_activo.png" alt="Servidor LM Studio activo">
+                <p class="caption">Fig 9. Servidor LM Studio activo: <strong>Status: Running</strong>, accesible en
+                    <code>http://127.0.0.1:1234</code>.
+                </p>
+            </div>
+
+            <div class="alert success">
+                <strong>✅ Servidor activo:</strong> La URL <code>http://127.0.0.1:1234</code> queda disponible para
+                recibir peticiones de inferencia desde cualquier cliente compatible (Kilo Code, curl, etc.).
+            </div>
+        </section>
+
+        <!-- Sección 5: Vinculación (Handshake) -->
+        <section>
+            <h2>5. Vinculación Kilo Code ↔ LM Studio</h2>
+            <p>Con el servidor activo, volvemos a Kilo Code para completar la configuración de conexión introduciendo la
+                URL base y seleccionando el modelo.</p>
+
+            <h3>5.1 Configurar Base URL</h3>
+            <p>En los ajustes de Kilo Code (Settings → Providers), con LM Studio seleccionado como API Provider,
+                introducimos:</p>
+
+            <pre><code>Base URL: http://127.0.0.1:1234
+Model ID: qwen/qwen3-vl-4b</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Agente/13_kilo_baseurl_modelo_vacio.png"
+                    alt="Kilo Code con Base URL configurada pero sin modelo">
+                <p class="caption">Fig 10. Ajustes de Kilo Code tras seleccionar LM Studio: Base URL
+                    <code>http://127.0.0.1:1234</code> introducida. El campo Model ID aún está vacío, mostrando el error
+                    "You must provide a valid model ID".
+                </p>
+            </div>
+
+            <h3>5.2 Seleccionar el Modelo</h3>
+            <p>Kilo Code detecta automáticamente los modelos disponibles en el servidor de LM Studio y los muestra como
+                opciones seleccionables:</p>
+
+            <div class="image-container">
+                <img src="asi/Agente/14_kilo_lista_modelos.png" alt="Lista de modelos detectados por Kilo Code">
+                <p class="caption">Fig 11. Lista de modelos detectados desde LM Studio: mistralai/ministral-3-3b,
+                    google/gemma-3-12b, google/gemma-3-1b, <strong>qwen/qwen3-vl-4b</strong>, qwen/qwen3-vl-30b.
+                    También se ve la opción de "Enable Speculative Decoding".</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Agente/15_kilo_modelo_seleccionado.png"
+                    alt="Modelo qwen3-vl-4b seleccionado en Kilo Code">
+                <p class="caption">Fig 12. Configuración completada: API Provider = LM Studio, Base URL =
+                    <code>http://127.0.0.1:1234</code>, Model ID = <code>qwen/qwen3-vl-4b</code>. Botón "Save"
+                    disponible para guardar.
+                </p>
+            </div>
+
+            <div class="alert warning">
+                <strong>⚠️ Importante:</strong> Asegúrate de que no haya espacios al final de la Base URL. El campo
+                Model
+                ID debe coincidir exactamente con el identificador que muestra LM Studio en su panel de información del
+                modelo.
+            </div>
+        </section>
+
+        <!-- Sección 6: Verificación -->
+        <section>
+            <h2>6. Verificación de la Integración</h2>
+            <p>Con todo configurado, verificamos que Kilo Code puede comunicarse con LM Studio y generar respuestas
+                utilizando el modelo local.</p>
+
+            <h3>6.1 Monitorización del Servidor</h3>
+            <p>En LM Studio, podemos observar en tiempo real las peticiones que recibe del agente a través de los
+                <strong>Developer Logs</strong>:
+            </p>
+
+            <div class="image-container">
+                <img src="asi/Agente/16_lmstudio_modelo_generando.png" alt="LM Studio procesando peticiones del agente">
+                <p class="caption">Fig 13. LM Studio procesando peticiones: modelo qwen/qwen3-vl-4b:2 cargado (3.11
+                    GB, MLX, 4bit). Los Developer Logs muestran progreso de prompt processing al 100% y "Finished
+                    streaming response". Servidor activo en http://127.0.0.1:1234. Hardware: RAM 3.81 GB, CPU 98.20%.
+                </p>
+            </div>
+
+            <h3>6.2 Uso de GPU durante la Inferencia</h3>
+            <p>El proceso de inferencia utiliza intensivamente la GPU. En un Mac con chip M1 Max, el historial de GPU
+                muestra alta utilización durante la generación de respuestas:</p>
+
+            <div class="image-container">
+                <img src="asi/Agente/17_gpu_historial_m1max.png" alt="Historial de uso de GPU Apple M1 Max">
+                <p class="caption">Fig 14. Monitor de actividad: Historial de GPU del Apple M1 Max (Integrada) mostrando
+                    uso intensivo durante la inferencia del modelo.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Agente/18_kilo_tarea_gpu_activa.png" alt="Kilo Code procesando tarea con GPU activa">
+                <p class="caption">Fig 15. Kilo Code ejecutando tarea "Haz una pagina web senc..." con API Request en
+                    progreso. Se observa el modelo <code>Qwen / Qwen3 Vl 4b</code> en la barra inferior de VS Code y
+                    el historial de GPU activo superpuesto.</p>
+            </div>
+
+            <h3>6.3 Resultado Generado</h3>
+            <p>El agente genera código funcional que puede previsualizarse directamente en el navegador:</p>
+
+            <div class="image-container">
+                <img src="asi/Agente/19_resultado_pagina_web.png" alt="Página web generada por Kilo Code">
+                <p class="caption">Fig 16. Resultado de la prueba: el agente IA generó una página web completa
+                    ("PROBANDO KILO CODE") que se muestra renderizada en el navegador. La GPU del M1 Max muestra picos
+                    de
+                    actividad durante la generación.</p>
+            </div>
+        </section>
+
+        <!-- Sección 7: Pruebas de Verificación -->
+        <section>
+            <h2>7. Pruebas de Identificación del Modelo</h2>
+            <p>Para confirmar que Kilo Code está utilizando efectivamente el modelo local y no un servicio en la nube,
+                realizamos dos pruebas de identificación directa.</p>
+
+            <div class="alert">
+                <strong>📝 Test 1:</strong> "¿Qué modelo eres?" — Verifica que el agente responde y se identifica.
+                <br>
+                <strong>📝 Test 2:</strong> "¿Qué modelo de LLM estás usando?" — Verifica que el agente identifica
+                correctamente el modelo subyacente (Qwen3-VL-4B).
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Agente/20_chat_que_modelo_eres.png" alt="Pregunta al agente: ¿qué modelo eres?">
+                <p class="caption">Fig 17. Test 1 — Prompt: "que modelo eres?". Respuesta de Kilo: "I am Kilo Code, a
+                    highly skilled software engineer with extensive knowledge in many programming languages, frameworks,
+                    design patterns, and best practices."</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Agente/21_chat_modelo_qwen3vl4b.png"
+                    alt="Pregunta al agente: ¿qué modelo de LLM estás usando?">
+                <p class="caption">Fig 18. Test 2 — Prompt: "que modelo de LLM estas usando?". Respuesta: "I am using
+                    the <strong>Qwen3-VL-4B</strong> model, a large language model with vision capabilities, designed
+                    for
+                    tasks involving both text and image understanding. This model is optimized for code generation,
+                    reasoning, and multi-modal tasks."</p>
+            </div>
+
+            <div class="alert success">
+                <strong>✅ Verificación exitosa:</strong> El agente confirma que utiliza el modelo
+                <strong>Qwen3-VL-4B</strong> servido localmente desde LM Studio. Toda la inferencia se ejecuta en el
+                hardware local (Apple M1 Max), garantizando privacidad total del código y funcionamiento offline.
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 - Documentación Generada para ASI</p>
+    </footer>
+
+</body>
+
+</html>

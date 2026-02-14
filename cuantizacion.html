@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica: Cuantización de Modelos LLM - Dev Blog</title>
+    <style>
+        :root {
+            --bg-body: #0d1117;
+            --text-main: #c9d1d9;
+            --text-heading: #ffffff;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --accent: #f0883e;
+            /* Orange for quantization/optimization */
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --code-bg: #22272e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--text-heading);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: #8b949e;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            color: var(--accent);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(240, 136, 62, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: var(--text-heading);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .image-container {
+            margin: 2rem 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .caption {
+            transform: translateY(10px);
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            background-color: rgba(110, 118, 129, 0.4);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 85%;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            color: #ffb86c;
+        }
+
+        .alert.success {
+            background-color: rgba(63, 185, 80, 0.1);
+            border-color: #3fb950;
+            color: #7ee787;
+        }
+
+        .alert.warning {
+            background-color: rgba(210, 153, 34, 0.1);
+            border-color: #d29922;
+            color: #e3b341;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 2rem;
+            color: var(--text-heading);
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .tool-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .tool-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tool-list li:last-child {
+            border-bottom: none;
+        }
+
+        .tool-list li strong {
+            color: var(--accent);
+        }
+
+        .diagram {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+            font-family: ui-monospace, monospace;
+            font-size: 0.95rem;
+            line-height: 2;
+        }
+
+        .diagram .arrow {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        .diagram .label {
+            color: #8b949e;
+            font-size: 0.8rem;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.85rem;
+            color: #484f58;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a href="index.html" class="back-link">← Volver al inicio</a>
+        <br><br>
+        <h1>Cuantización de Modelos LLM</h1>
+        <span class="date">Publicado: 14 de Febrero, 2026</span>
+        <p>Guía técnica completa: Descargar el modelo Microsoft Phi-3 Mini, convertirlo a formato GGUF y aplicar
+            cuantización a 4-bits para optimizar su inferencia en hardware de consumo.</p>
+    </header>
+
+    <main>
+
+        <!-- Sección 0: Resumen del Pipeline -->
+        <section>
+            <h2>Pipeline de Cuantización</h2>
+            <p>El proceso de cuantización transforma un modelo de lenguaje de gran tamaño en una versión comprimida que
+                puede ejecutarse eficientemente en hardware de consumo. Este es el flujo completo:</p>
+
+            <div class="diagram">
+                <strong>Modelo HuggingFace</strong> (safetensors, ~7.6 GB)
+                <br>
+                <span class="arrow">↓</span> <span class="label">convert_hf_to_gguf.py</span>
+                <br>
+                <strong>Archivo GGUF FP16</strong> (~7.6 GB, sin pérdida)
+                <br>
+                <span class="arrow">↓</span> <span class="label">llama-quantize (q4_k_m)</span>
+                <br>
+                <strong>Archivo GGUF Q4</strong> (~2.4 GB, optimizado)
+                <br>
+                <span class="arrow">↓</span> <span class="label">Copiar a LM Studio</span>
+                <br>
+                <strong>Inferencia Local</strong> (40-70 tok/s)
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value">7.6 GB</span>
+                    <span class="stat-label">Modelo Original (FP16)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">2.4 GB</span>
+                    <span class="stat-label">Modelo Cuantizado (Q4)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">~3x</span>
+                    <span class="stat-label">Reducción de Tamaño</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">70 tok/s</span>
+                    <span class="stat-label">Velocidad Inferencia</span>
+                </div>
+            </div>
+
+            <ul class="tool-list">
+                <li><strong>Modelo:</strong> Microsoft Phi-3-mini-4k-instruct (3B parámetros)</li>
+                <li><strong>Motor:</strong> llama.cpp (compilación desde código fuente)</li>
+                <li><strong>Método:</strong> q4_k_m (4-bit, equilibrio tamaño/calidad)</li>
+                <li><strong>Herramientas:</strong> Python 3.12, CMake, HuggingFace Hub</li>
+                <li><strong>Destino:</strong> LM Studio (inferencia local)</li>
+            </ul>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/01_estructura_carpetas_proyecto.png"
+                    alt="Estructura de carpetas del proyecto">
+                <p class="caption">Fig 1. Estructura del proyecto Cuantizacion_IA con carpetas de modelos cuantizados.
+                </p>
+            </div>
+        </section>
+
+        <!-- Sección 1: Configuración del Entorno -->
+        <section>
+            <h2>1. Configuración del Entorno de Trabajo</h2>
+            <p>El primer paso asegura un entorno aislado y limpio para evitar conflictos entre librerías de Python y
+                herramientas del sistema.</p>
+
+            <h3>1.1 Preparación de Directorios y Herramientas</h3>
+            <p>Establecemos la estructura del proyecto en la terminal (WSL2/Linux):</p>
+
+            <pre><code># 1. Crear directorio del proyecto y navegar a él
+mkdir proyecto_phi3
+cd proyecto_phi3
+
+# 2. Clonar el repositorio oficial de llama.cpp
+git clone https://github.com/ggerganov/llama.cpp.git
+
+# 3. Crear entorno virtual (venv) para aislar dependencias
+python3 -m venv venv
+
+# 4. Activar el entorno
+source venv/bin/activate</code></pre>
+
+            <h3>1.2 Instalación de Dependencias</h3>
+            <p>Instalamos las librerías para la gestión de tensores y la descarga desde HuggingFace:</p>
+
+            <pre><code># Actualizar gestor de paquetes
+pip install --upgrade pip
+
+# Instalar librerías requeridas
+pip install numpy sentencepiece transformers gguf huggingface_hub cmake</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/02_instalacion_cmake_pip.png" alt="Instalación de CMake vía pip">
+                <p class="caption">Fig 2. Instalación de CMake mediante pip tras fallar con brew (entorno macOS sin
+                    Homebrew).</p>
+            </div>
+        </section>
+
+        <!-- Sección 2: Compilación de llama.cpp -->
+        <section>
+            <h2>2. Compilación del Motor (llama.cpp)</h2>
+            <p>Compilamos el código fuente C++ para generar los binarios de conversión y cuantización. Este paso es
+                necesario porque <code>llama-quantize</code> no se distribuye como paquete pre-compilado.</p>
+
+            <pre><code>cd llama.cpp
+
+# 1. Configurar la construcción (Build System)
+cmake -B build
+
+# 2. Compilar los ejecutables en modo 'Release' (Optimizado)
+cmake --build build --config Release -j 8</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/03_cmake_configuracion_build.png" alt="Configuración de CMake">
+                <p class="caption">Fig 3. Salida de <code>cmake -B build</code>: detección de compiladores (AppleClang
+                    17.0), arquitectura ARM64, y advertencias sobre OpenMP.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/04_compilacion_llama_cpp.png" alt="Compilación de llama.cpp en progreso">
+                <p class="caption">Fig 4. Proceso de compilación: building de librerías ggml-base, ggml-metal (Apple
+                    Silicon), ggml-cpu y ggml-blas.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/05_compilacion_completa_clonado_modelo.png"
+                    alt="Compilación completada al 100%">
+                <p class="caption">Fig 5. Compilación completada al 100%. Targets finales construidos: llama-fit-params,
+                    llama-export-lora. Intento inicial de clonar el modelo con git-lfs.</p>
+            </div>
+
+            <div class="alert">
+                <strong>⚠️ Nota:</strong> Al finalizar la compilación, se debe verificar que existe el archivo
+                <code>llama-quantize</code> en la ruta <code>build/bin/</code>. Sin este binario, la cuantización no
+                será posible.
+            </div>
+        </section>
+
+        <!-- Sección 3: Descarga del Modelo -->
+        <section>
+            <h2>3. Adquisición del Modelo (Phi-3-Mini)</h2>
+            <p>Descargamos los pesos originales del modelo sin necesidad de <code>git-lfs</code>, utilizando
+                directamente la API de HuggingFace Hub con Python:</p>
+
+            <pre><code>cd ..
+
+python3 -c "from huggingface_hub import snapshot_download; \
+snapshot_download(repo_id='microsoft/Phi-3-mini-4k-instruct', \
+local_dir='Phi-3-mini-4k-instruct', \
+local_dir_use_symlinks=False)"</code></pre>
+
+            <pre><code># Verificación del tamaño descargado (aprox. 7.6 GB)
+du -sh Phi-3-mini-4k-instruct</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/06_descarga_modelo_error_torch.png"
+                    alt="Descarga del modelo y error de torch">
+                <p class="caption">Fig 6. Descarga completa del modelo (7.1 GB). Se observa el progreso de descarga de
+                    los archivos safetensors (~4.97 GB cada shard). Al intentar la conversión, se detecta un error por
+                    falta de PyTorch.</p>
+            </div>
+
+            <div class="alert warning">
+                <strong>⚠️ Error detectado:</strong> <code>ModuleNotFoundError: No module named 'torch'</code>. Fue
+                necesario instalar PyTorch antes de proceder con la conversión a GGUF. Solución:
+                <code>pip install torch</code>.
+            </div>
+        </section>
+
+        <!-- Sección 4: Conversión y Cuantización -->
+        <section>
+            <h2>4. Conversión y Cuantización</h2>
+            <p>Esta es la fase crítica donde transformamos el modelo para que sea ejecutable localmente. El proceso
+                consta de dos pasos secuenciales.</p>
+
+            <h3>4.1 Paso 1: Conversión a GGUF (FP16)</h3>
+            <p>Transformamos el formato de HuggingFace (tensores sueltos en archivos <code>.safetensors</code>) a un
+                único archivo GGUF en Media Precisión (FP16). Este archivo es una <strong>copia exacta</strong> pero en
+                otro formato, sin pérdida de calidad ni compresión.</p>
+
+            <pre><code>python3 llama.cpp/convert_hf_to_gguf.py \
+  ./Phi-3-mini-4k-instruct \
+  --outfile phi-3-fp16.gguf \
+  --outtype f16</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/07_conversion_gguf_tensores.png" alt="Proceso de conversión a GGUF">
+                <p class="caption">Fig 7. Exportación de tensores del modelo: cada capa (blk.0 a blk.31) se convierte de
+                    bfloat16 a F16/F32, mostrando las dimensiones de cada weight.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/08_exportacion_gguf_cuantizacion.png"
+                    alt="Exportación GGUF completada y cuantización">
+                <p class="caption">Fig 8. Exportación GGUF completada (195 tensores, 7.6 GB). Se inicia inmediatamente
+                    el comando de cuantización <code>llama-quantize</code> con método Q4_K_M. Se observan los metadatos
+                    del modelo (Phi-3, contexto 4096, 32 bloques).</p>
+            </div>
+
+            <h3>4.2 Paso 2: Cuantización a 4-bits (Compresión)</h3>
+            <p>Utilizamos la herramienta compilada anteriormente para reducir el tamaño del modelo. El método
+                <code>q4_k_m</code> ofrece el mejor equilibrio entre tamaño e "inteligencia" del modelo.</p>
+
+            <pre><code>./llama.cpp/build/bin/llama-quantize \
+  phi-3-fp16.gguf \
+  phi-3-mini-q4.gguf \
+  q4_k_m</code></pre>
+
+            <div class="alert success">
+                <strong>✅ Método q4_k_m:</strong> Cuantización de 4 bits con mezcla K-quants media. Mantiene capas
+                importantes (attention, output) en mayor precisión (q5/q6) mientras comprime las capas de feed-forward a
+                q4. Resultado: máxima calidad por GB.
+            </div>
+        </section>
+
+        <!-- Sección 5: Verificación -->
+        <section>
+            <h2>5. Verificación de Resultados</h2>
+            <p>Comparamos los archivos resultantes para validar la optimización:</p>
+
+            <pre><code>ls -lh *.gguf</code></pre>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value">7.1 GB</span>
+                    <span class="stat-label">phi-3-fp16.gguf (Alta fidelidad)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">2.2 GB</span>
+                    <span class="stat-label">phi-3-mini-q4.gguf (Optimizado)</span>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/09_resultado_cuantizacion_tamanos.png"
+                    alt="Comparación de tamaños de archivos GGUF">
+                <p class="caption">Fig 9. Resultado final de la cuantización. Modelo original: 7288.51 MiB → Modelo
+                    cuantizado: 2281.66 MiB. Tiempo total: 24.3 segundos.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/12_archivos_gguf_proyecto.png" alt="Archivos GGUF en el Finder">
+                <p class="caption">Fig 10. Vista del explorador de archivos mostrando el proyecto con los archivos GGUF
+                    resultantes (phi-3-fp16.gguf y phi-3-mini-q4.gguf) junto al código fuente de llama.cpp y el modelo
+                    original.</p>
+            </div>
+        </section>
+
+        <!-- Sección 6: Despliegue -->
+        <section>
+            <h2>6. Despliegue en LM Studio</h2>
+            <p>El archivo <code>phi-3-mini-q4.gguf</code> ya está listo para producción. Lo copiamos a la carpeta de
+                modelos de LM Studio para disponerlo para inferencia local.</p>
+
+            <pre><code># Crear directorio destino en LM Studio
+mkdir -p ~/.lmstudio/models/Local/Phi-3
+
+# Copiar el modelo cuantizado
+cp phi-3-mini-q4.gguf ~/.lmstudio/models/Local/Phi-3/</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/11_despliegue_modelo_lmstudio.png" alt="Comandos de despliegue del modelo">
+                <p class="caption">Fig 11. Comandos de terminal para crear la carpeta de destino y copiar el modelo
+                    cuantizado a LM Studio.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/10_lmstudio_modelos_phi3.png" alt="Lista de modelos en LM Studio">
+                <p class="caption">Fig 12. LM Studio reconoce el modelo phi-3 Local con cuantización Q4 y 2.39 GB de
+                    tamaño, junto a otros modelos instalados.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Cuantizacion/13_lmstudio_modelo_importado.png" alt="Modelo importado en LM Studio">
+                <p class="caption">Fig 13. Vista completa de My Models en LM Studio. Se observa el modelo
+                    <code>phi3-mini</code> importado desde Tadeo-Models (cuantizado manualmente) junto al phi-3 Local
+                    original.</p>
+            </div>
+        </section>
+
+        <!-- Sección 7: Pruebas de Inferencia -->
+        <section>
+            <h2>7. Pruebas de Inferencia Comparativas</h2>
+            <p>Para validar que la cuantización no ha degradado significativamente la calidad del modelo, realizamos una
+                prueba comparativa en LM Studio con ambas versiones del modelo, usando el mismo prompt.</p>
+
+            <div class="alert">
+                <strong>📝 Prompt de prueba:</strong> "Hola, dime que tipo de modelo eres y cuanto es tu peso en GB,
+                ademas dime cual es la velocidad maxima que ha alcanzado Usain Bolt"
+            </div>
+
+            <h3>Resultado con phi-3 (Local, Q4 original)</h3>
+            <div class="image-container">
+                <img src="asi/Cuantizacion/14_chat_prueba_phi3_original.png" alt="Chat de prueba con phi-3 original">
+                <p class="caption">Fig 14. Inferencia con el modelo phi-3 original: 40.83 tok/sec, 138 tokens, 0.39s
+                    hasta primer token. El modelo responde en español correctamente pero no proporciona datos
+                    específicos sobre Usain Bolt.</p>
+            </div>
+
+            <h3>Resultado con phi3-mini (Cuantizado manualmente)</h3>
+            <div class="image-container">
+                <img src="asi/Cuantizacion/15_chat_prueba_phi3mini_cuantizado.png"
+                    alt="Chat de prueba con phi3-mini cuantizado">
+                <p class="caption">Fig 15. Inferencia con el modelo phi3-mini cuantizado: <strong>70.15
+                        tok/sec</strong>, 211 tokens, 0.21s hasta primer token. Mayor velocidad y respuesta más
+                    detallada, incluyendo datos concretos sobre Usain Bolt (9.58s, Atenas 2004).</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value">40.8</span>
+                    <span class="stat-label">tok/s (phi-3 original)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">70.2</span>
+                    <span class="stat-label">tok/s (phi3-mini cuantizado)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">0.39s</span>
+                    <span class="stat-label">Latencia (original)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">0.21s</span>
+                    <span class="stat-label">Latencia (cuantizado)</span>
+                </div>
+            </div>
+
+            <div class="alert success">
+                <strong>✅ Conclusión:</strong> El modelo cuantizado manualmente no solo mantiene la calidad del
+                original, sino que muestra un rendimiento superior: <strong>1.7x más rápido</strong> en tokens/segundo,
+                <strong>1.8x menor latencia</strong> al primer token y respuestas más completas y detalladas.
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 - Documentación Generada para ASI</p>
+    </footer>
+
+</body>
+
+</html>

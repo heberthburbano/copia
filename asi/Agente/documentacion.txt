@@ -1,0 +1,97 @@
+Guía Técnica: Despliegue de Asistente de Código Local (Kilo + LM Studio)
+Fecha: 14 de Febrero, 2026
+Objetivo: Configurar un entorno de desarrollo en Visual Studio Code asistido por Inteligencia Artificial (Copilot) ejecutado localmente, garantizando la privacidad del código y funcionamiento sin conexión a internet.
+Herramientas: Visual Studio Code, Extensión "Kilo", LM Studio.
+
+1. Instalación del Cliente (VS Code)
+El primer paso consiste en preparar el Entorno de Desarrollo Integrado (IDE) con la extensión necesaria para interactuar con el modelo.
+
+Abre Visual Studio Code.
+
+Dirígete a la pestaña de Extensiones (Icono de cubos en la barra lateral izquierda o Ctrl+Shift+X).
+
+En la barra de búsqueda, escribe: Kilo Code.
+
+Selecciona la extensión "Kilo Code: AI Coding agent, Copilot, and Autocomplete" y haz clic en Instalar.
+
+Una vez instalada, aparecerá el icono de Kilo (un rayo o logotipo distintivo) en la barra lateral.
+
+2. Autenticación y Configuración Inicial
+Para utilizar la extensión, es necesario registrar el dispositivo.
+
+Haz clic en el icono de Kilo en la barra lateral.
+
+Sigue las instrucciones para Registrarte/Iniciar Sesión (Sign Up/Log In).
+
+Se te proporcionará un Código de Verificación.
+
+Introduce el código en la ventana emergente de VS Code para autorizar el dispositivo.
+
+Estado: Espera a recibir la confirmación: "Authorization successful".
+
+3. Configuración del Proveedor Local
+Por defecto, estas extensiones suelen buscar servicios en la nube. Debemos redirigir el tráfico hacia nuestro servidor local.
+
+3.1 Selección del Modo de Asistencia
+En el menú principal de Kilo, asegúrate de seleccionar el modo "Code".
+
+Nota: Esto optimiza el "System Prompt" del agente para tareas de programación, refactorización y depuración, en lugar de chat general.
+
+3.2 Cambio de Backend (API)
+Entra en el menú de Settings (Configuración) dentro de la extensión Kilo.
+
+Localiza la sección "Configuration Profile" y mantenla en default.
+
+Busca el campo "API Provider" (Proveedor de API).
+
+En el menú desplegable, selecciona "LM Studio" (o en algunas versiones OpenAI Compatible).
+
+4. Despliegue del Servidor de Inferencia (LM Studio)
+Ahora debemos levantar el servidor que procesará las peticiones de código.
+
+Abre la aplicación LM Studio.
+
+Ve a la pestaña "Developer" (icono de herramientas o < > en la barra lateral).
+
+Selección del Modelo: Carga el modelo que desees usar (Recomendado para código: Qwen 2.5 Coder, DeepSeek Coder o Phi-3).
+
+Iniciar Servidor: Haz clic en el interruptor "Start Server".
+
+Estado esperado: El indicador cambiará a verde (Running).
+
+Copia la URL: Localiza la dirección IP y puerto proporcionados. Por defecto suele ser:
+
+HTTP
+
+http://127.0.0.1:1234
+5. Vinculación (Handshake)
+Con el servidor corriendo, volvemos a Visual Studio Code para finalizar la conexión.
+
+En los ajustes de Kilo Code (donde lo dejaste en el paso 3.2):
+
+Base URL: Pega la dirección IP de LM Studio.
+
+Ejemplo: http://127.0.0.1:1234 (Asegúrate de no dejar espacios al final).
+
+Model ID: Escribe o selecciona el identificador del modelo que cargaste en LM Studio.
+
+Ejemplo: qwen2.5-coder-7b-instruct
+
+Haz clic en Save y después en Done para aplicar la configuración.
+
+6. Verificación y Testing
+Para asegurar que la integración es correcta y que los datos fluyen entre el IDE y el servidor local:
+
+Prueba Funcional (Generación)
+Pide al asistente una tarea de código simple en el chat de Kilo:
+
+"Genera un script en Python que calcule la secuencia de Fibonacci."
+
+Prueba de Identidad (Conectividad)
+Para confirmar que no está usando un modelo en la nube por error, pregunta:
+
+"¿Qué modelo LLM estás utilizando para responder esto?"
+
+Resultado esperado: El asistente debe responder con el nombre del modelo local (ej. "Estoy usando Qwen...") o mostrar el ID técnico que configuraste.
+
+Monitorización: Puedes mirar la ventana de "Server Logs" en LM Studio mientras generas código; deberías ver texto verde desplazándose, indicando que la petición ha llegado correctamente.

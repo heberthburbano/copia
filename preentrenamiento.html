@@ -275,10 +275,68 @@ cmake --build build --config Release -j 8</code></pre>
         </section>
 
         <section>
-            <h2>6. Conclusión</h2>
+            <h2>6. Despliegue en Arquitectura Blackwell (RTX 5060 Ti)</h2>
+            <p><strong>Hardware:</strong> NVIDIA GeForce RTX 5060 Ti (Arquitectura Blackwell - Compute Capability
+                sm_120)<br>
+                <strong>Fecha:</strong> 12 de Febrero, 2026
+            </p>
+
+            <h3>6.1 El Reto Tecnológico</h3>
+            <p>Al intentar utilizar la RTX 5060 Ti con el stack estándar de IA (PyTorch Stable + CUDA 12.4), se
+                encontró un error de incompatibilidad crítico:</p>
+            <pre><code>Error: NVIDIA GeForce RTX 5060 Ti with CUDA capability sm_120 is not compatible
+with the current PyTorch installation.</code></pre>
+            <p>La arquitectura Blackwell introduce el conjunto de instrucciones <code>sm_120</code>, ausente en los
+                binarios estables. Se requirió migrar a un entorno <strong>Nightly (Experimental)</strong>.</p>
+
+            <h3>6.2 Configuración del Entorno "Bleeding Edge"</h3>
+            <p>Se identificó que el soporte para Blackwell requiere CUDA 12.8. Los paquetes de visión y audio
+                (<code>torchvision</code>, <code>torchaudio</code>) aún no estaban disponibles, por lo que se procedió
+                a una instalación modular:</p>
+            <pre><code>pip uninstall torch torchvision torchaudio -y
+pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu128
+pip install transformers datasets accelerate</code></pre>
+            <p>Validación de la arquitectura <code>sm_120</code>:</p>
+            <pre><code>import torch
+print(torch.cuda.get_arch_list())
+# Resultado: ['sm_50', ..., 'sm_90', 'sm_100', 'sm_120'] -> ÉXITO</code></pre>
+
+            <h3>6.3 Entrenamiento y Monitoreo GPU</h3>
+            <p>Se entrenó el modelo GPT-2 con el texto de "El Quijote". La RTX 5060 Ti alcanzó un 98% de uso de GPU,
+                procesando el entrenamiento a velocidades muy superiores gracias a los núcleos Tensor de nueva
+                generación.</p>
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_5_Entrenamiento_GPU_RTX5060Ti.png" alt="Entrenamiento RTX 5060 Ti">
+                <p class="caption">Fig 10. Entrenamiento del modelo con RTX 5060 Ti al 98% de uso de GPU (11.9/16 GB
+                    VRAM).</p>
+            </div>
+
+            <h3>6.4 Conversión y Despliegue</h3>
+            <p>Se gestionó cuidadosamente las dependencias para no romper el entorno Nightly, instalando solo lo
+                necesario para <code>llama.cpp</code>:</p>
+            <pre><code>pip install gguf protobuf sentencepiece numpy
+python3 convert_hf_to_gguf.py ../modelo_quijote_hf --outfile ../quijote_5060ti.gguf</code></pre>
+            <p>El modelo se transfirió a Windows y se desplegó en LM Studio, respetando la estructura de directorios
+                requerida:</p>
+            <pre><code>C:\Users\[Usuario]\.cache\lm-studio\models\Paco\Quijote5060\</code></pre>
+
+            <div class="image-container">
+                <img src="asi/preEntrenamiento/Paso_5_Generacion_Texto_LMStudio_5060Ti.png" alt="LM Studio 5060 Ti">
+                <p class="caption">Fig 11. Modelo desplegado generando texto en LM Studio con la RTX 5060 Ti.</p>
+            </div>
+
+            <div class="alert">
+                <strong>Logro clave:</strong> Se ha puesto en marcha una NVIDIA RTX 5060 Ti para Deep Learning antes de
+                que exista soporte oficial estable, demostrando capacidad para diagnosticar errores de arquitectura
+                (sm_120) y gestionar software experimental (Nightly Builds).
+            </div>
+        </section>
+
+        <section>
+            <h2>7. Conclusión</h2>
             <p>El modelo <strong>Cervantes-GPT</strong> es funcional, capaz de autocompletar texto con el estilo del
-                Siglo de Oro. Se ha completado el ciclo MLOps: Datos -> Entrenamiento -> Validación -> Conversión ->
-                Despliegue.</p>
+                Siglo de Oro. Se ha completado el ciclo MLOps en dos generaciones de hardware (RTX 4070 y RTX 5060 Ti):
+                Datos -> Entrenamiento (GPU) -> Validación -> Conversión/Compilación -> Despliegue en Producción.</p>
         </section>
 
     </main>
