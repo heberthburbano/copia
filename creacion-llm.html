@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creación de un LLM desde Cero — Chef-Bot</title>
+    <style>
+        :root {
+            --bg-body: #0d1117;
+            --bg-card: #161b22;
+            --bg-code: #0d1117;
+            --text-main: #c9d1d9;
+            --text-heading: #ffffff;
+            --text-muted: #8b949e;
+            --border: #30363d;
+            --accent: #a855f7;
+            --accent-dim: rgba(168, 85, 247, 0.15);
+            --accent-border: rgba(168, 85, 247, 0.4);
+            --green: #3fb950;
+            --blue: #58a6ff;
+            --orange: #f0883e;
+            --red: #f85149;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.7;
+            padding: 0;
+        }
+
+        /* --- Hero Header --- */
+        .hero {
+            position: relative;
+            padding: 5rem 2rem 4rem;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(168, 85, 247, 0.12) 0%, var(--bg-body) 100%);
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero .emoji-icon {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            color: var(--text-heading);
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin: 0 auto 2rem;
+            text-align: center;
+        }
+
+        .hero .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: opacity 0.2s;
+        }
+
+        .hero .back-link:hover {
+            opacity: 0.8;
+        }
+
+        /* --- Tag pills --- */
+        .tags-hero {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 2rem;
+            background-color: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid var(--accent-border);
+            font-weight: 600;
+        }
+
+        .tag.green {
+            background-color: rgba(63, 185, 80, 0.15);
+            color: var(--green);
+            border-color: rgba(63, 185, 80, 0.4);
+        }
+
+        .tag.blue {
+            background-color: rgba(88, 166, 255, 0.15);
+            color: var(--blue);
+            border-color: rgba(88, 166, 255, 0.4);
+        }
+
+        .tag.orange {
+            background-color: rgba(240, 136, 62, 0.15);
+            color: var(--orange);
+            border-color: rgba(240, 136, 62, 0.4);
+        }
+
+        /* --- Layout --- */
+        .page-layout {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* --- TOC (Fixed Left Sidebar) --- */
+        .toc {
+            position: fixed;
+            top: 50%;
+            left: 2rem;
+            transform: translateY(-50%);
+            width: 200px;
+            z-index: 10;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .toc.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .toc h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li a {
+            display: block;
+            padding: 0.35rem 0;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border-left: 2px solid transparent;
+            padding-left: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .toc li a:hover,
+        .toc li a.active {
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        @media (max-width: 1100px) {
+            .toc {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-layout {
+                padding: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* --- Content Sections --- */
+        .page-layout>section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2.5rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s;
+        }
+
+        .page-layout>section:hover {
+            border-color: #484f58;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        h2 .sec-icon {
+            font-size: 1.3rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: var(--blue);
+            margin-top: 1.5rem;
+            margin-bottom: 0.6rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        ul,
+        ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        strong {
+            color: var(--text-heading);
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background: rgba(110, 118, 129, 0.15);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.88em;
+            color: var(--orange);
+        }
+
+        /* --- Architecture Grid --- */
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .arch-card {
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            padding: 1.25rem;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .arch-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+        .arch-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+        }
+
+        .arch-card .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* --- Flow Steps --- */
+        .flow-pipeline {
+            display: flex;
+            gap: 0;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .flow-step {
+            flex: 1;
+            min-width: 140px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .flow-step:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .flow-step:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .flow-step .step-num {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            line-height: 26px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .flow-step .step-title {
+            font-weight: 600;
+            color: var(--text-heading);
+            font-size: 0.9rem;
+            display: block;
+        }
+
+        .flow-step .step-desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: "→";
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: var(--accent);
+            z-index: 1;
+        }
+
+        /* --- Code Blocks --- */
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1.25rem 0;
+        }
+
+        .code-header {
+            background: #1c2128;
+            padding: 0.5rem 1rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .code-header .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .code-header .dot.red {
+            background: #f85149;
+        }
+
+        .code-header .dot.yellow {
+            background: #d29922;
+        }
+
+        .code-header .dot.green {
+            background: #3fb950;
+        }
+
+        .code-block pre {
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: #e6edf3;
+            margin: 0;
+        }
+
+        .code-block pre .comment {
+            color: #8b949e;
+        }
+
+        .code-block pre .keyword {
+            color: #ff7b72;
+        }
+
+        .code-block pre .string {
+            color: #a5d6ff;
+        }
+
+        .code-block pre .function {
+            color: #d2a8ff;
+        }
+
+        .code-block pre .number {
+            color: #79c0ff;
+        }
+
+        /* --- Tables --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        thead th {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--accent);
+            padding: 0.85rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        tbody td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr:hover {
+            background: rgba(110, 118, 129, 0.05);
+        }
+
+        /* --- Info Cards --- */
+        .info-card {
+            background: rgba(168, 85, 247, 0.06);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-left: 4px solid var(--accent);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.25rem 0;
+        }
+
+        .info-card.green-card {
+            background: rgba(63, 185, 80, 0.06);
+            border-color: rgba(63, 185, 80, 0.2);
+            border-left-color: var(--green);
+        }
+
+        .info-card h4 {
+            color: var(--text-heading);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        /* --- File Tree --- */
+        .file-tree {
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin: 1.25rem 0;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 2;
+        }
+
+        .file-tree .folder {
+            color: var(--blue);
+        }
+
+        .file-tree .file-py {
+            color: var(--green);
+        }
+
+        .file-tree .file-data {
+            color: var(--orange);
+        }
+
+        .file-tree .file-model {
+            color: var(--accent);
+        }
+
+        .file-tree .desc {
+            color: var(--text-muted);
+            font-family: var(--font-main);
+            font-size: 0.8rem;
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ========== HERO ========== -->
+    <div class="hero">
+        <a href="index.html" class="back-link">← Volver al portafolio</a>
+        <span class="emoji-icon">🧑‍🍳</span>
+        <h1>Creación de un <span>LLM desde Cero</span></h1>
+        <p class="subtitle">Memoria completa del proyecto Chef-Bot: un modelo de lenguaje autoregresivo creado sin
+            modelos
+            base, entrenado con 5,000 recetas sintéticas y convertido a GGUF para inferencia local.</p>
+        <div class="tags-hero">
+            <span class="tag">From Scratch</span>
+            <span class="tag green">Python</span>
+            <span class="tag blue">PyTorch</span>
+            <span class="tag blue">HuggingFace</span>
+            <span class="tag orange">GGUF</span>
+        </div>
+    </div>
+
+    <!-- ========== LAYOUT ========== -->
+    <div class="page-layout">
+
+        <!-- Navigation TOC -->
+        <nav class="toc">
+            <h3>Contenido</h3>
+            <ul>
+                <li><a href="#intro">1. Introducción</a></li>
+                <li><a href="#arch">2. Arquitectura del Modelo</a></li>
+                <li><a href="#estructura">3. Estructura del Proyecto</a></li>
+                <li><a href="#dataset">4. Generación del Dataset</a></li>
+                <li><a href="#train">5. Entrenamiento</a></li>
+                <li><a href="#inference">6. Inferencia</a></li>
+                <li><a href="#gguf">7. Conversión GGUF</a></li>
+                <li><a href="#codigo">8. Código Fuente</a></li>
+                <li><a href="#conclusion">9. Conclusiones</a></li>
+            </ul>
+        </nav>
+
+        <!-- 1. Introducción -->
+        <section id="intro">
+            <h2><span class="sec-icon">📖</span> 1. Introducción</h2>
+            <p>
+                Este proyecto tiene como objetivo la <strong>creación real de un Modelo de Lenguaje Grande
+                    (LLM)</strong>
+                especializado en cocina, partiendo absolutamente desde cero. A diferencia del <em>Fine-Tuning</em>
+                (donde se ajusta un modelo ya existente como Llama o GPT), aquí hemos construido la arquitectura de
+                la
+                red neuronal vacía y le hemos enseñado a hablar y cocinar usando únicamente nuestro propio dataset.
+            </p>
+            <div class="info-card">
+                <h4>🎯 Metodología "From Scratch"</h4>
+                <p style="margin-bottom: 0;">El modelo no posee conocimientos lingüísticos previos. Su aprendizaje
+                    se basa
+                    enteramente en las asociaciones estadísticas presentes en el dataset de entrenamiento. El modelo
+                    nació sin
+                    saber nada, ni siquiera qué es una letra.</p>
+            </div>
+        </section>
+
+        <!-- 2. Arquitectura -->
+        <section id="arch">
+            <h2><span class="sec-icon">🧠</span> 2. Arquitectura del Modelo</h2>
+            <p>
+                Se ha implementado una variante de la arquitectura <strong>Transformer Decoder-Only</strong>
+                (Mini-GPT),
+                basada en GPT-2. Esta arquitectura utiliza el mecanismo de atención para calcular la relevancia de
+                cada
+                palabra en relación con las demás dentro de una secuencia culinaria.
+            </p>
+
+            <div class="arch-grid">
+                <div class="arch-card">
+                    <span class="value">6</span>
+                    <span class="label">Capas (Layers)</span>
+                </div>
+                <div class="arch-card">
+                    <span class="value">8</span>
+                    <span class="label">Cabezas de Atención</span>
+                </div>
+                <div class="arch-card">
+                    <span class="value">512</span>
+                    <span class="label">Dimensión Embeddings</span>
+                </div>
+                <div class="arch-card">
+                    <span class="value">~30M</span>
+                    <span class="label">Parámetros Totales</span>
+                </div>
+            </div>
+
+            <h3>Componentes Estructurales</h3>
+            <ul>
+                <li><strong>Self-Attention:</strong> Permite al modelo entender que en "Bate el huevo hasta que esté
+                    espumoso", la palabra "espumoso" se refiere al "huevo".</li>
+                <li><strong>Causal Masking:</strong> Asegura que el modelo solo aprenda a predecir la palabra
+                    siguiente
+                    basándose en las anteriores, nunca en las futuras.</li>
+                <li><strong>Feed-Forward Networks:</strong> Capas densas que procesan las representaciones obtenidas
+                    por
+                    la atención para extraer patrones complejos.</li>
+                <li><strong>LayerNorm:</strong> Estabiliza la dinámica de entrenamiento, evitando que las
+                    activaciones
+                    neuronales saturen las funciones de transferencia.</li>
+            </ul>
+        </section>
+
+        <!-- 3. Estructura del Proyecto -->
+        <section id="estructura">
+            <h2><span class="sec-icon">📁</span> 3. Estructura del Proyecto</h2>
+            <p>La carpeta <code>Creacion_llm</code> contiene todos los artefactos necesarios para reproducir el
+                proyecto:</p>
+
+            <div class="file-tree">
+                <span class="folder">📂 Creacion_llm/</span><br>
+                ├── <span class="file-py">🐍 generate_dataset.py</span> <span class="desc">— Generador sintético de
+                    datos</span><br>
+                ├── <span class="file-data">📄 recetas_extended.jsonl</span> <span class="desc">— Dataset: 5,000
+                    recetas</span><br>
+                ├── <span class="file-py">🐍 train_from_scratch.py</span> <span class="desc">— Script de
+                    entrenamiento</span><br>
+                ├── <span class="file-py">🐍 inference_scratch.py</span> <span class="desc">— Script de
+                    inferencia</span><br>
+                ├── <span class="file-model">🤖 chef-bot-scratch.gguf</span> <span class="desc">— Modelo en formato
+                    GGUF</span><br>
+                └── <span class="folder">📂 chef-bot-scratch-final/</span> <span class="desc">— Modelo entrenado
+                    (pesos + config)</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file-data">config.json</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file-model">model.safetensors</span> <span class="desc">—
+                    ~180 MB de pesos</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file-data">tokenizer.json</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;└── <span class="file-data">vocab.json</span>
+            </div>
+        </section>
+
+        <!-- 4. Generación del Dataset -->
+        <section id="dataset">
+            <h2><span class="sec-icon">🗃️</span> 4. Generación del Dataset</h2>
+            <p>
+                Como un modelo desde cero necesita muchos datos para aprender patrones básicos, hemos creado un
+                <strong>generador sintético</strong> (<code>generate_dataset.py</code>) que produce <strong>5,000
+                    recetas
+                    únicas</strong> combinando ingredientes, técnicas y estilos de respuesta culinaria.
+            </p>
+
+            <h3>Bases de Datos de Ingredientes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Ejemplos</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Proteínas</strong></td>
+                        <td>pollo, ternera, salmón, tofu, langostinos…</td>
+                        <td>15</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Verduras</strong></td>
+                        <td>cebolla, pimiento, calabacín, espinacas, brócoli…</td>
+                        <td>15</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Carbohidratos</strong></td>
+                        <td>patatas, arroz, pasta, quinoa, garbanzos…</td>
+                        <td>9</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Extras</strong></td>
+                        <td>limón, vino blanco, nata, albahaca, miel…</td>
+                        <td>13</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Técnicas</strong></td>
+                        <td>al horno, a la plancha, estofado, al vapor…</td>
+                        <td>8</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Algoritmo de Generación</h3>
+            <p>
+                El script selecciona 2-4 ingredientes aleatorios, nombra el plato según la proteína y la técnica
+                elegida, y genera instrucciones de cocina variando plantillas para que el modelo reciba datos
+                diversos.
+            </p>
+
+            <div class="flow-pipeline">
+                <div class="flow-step">
+                    <span class="step-num">1</span>
+                    <span class="step-title">Selección</span>
+                    <span class="step-desc">2-4 ingredientes del pool</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">2</span>
+                    <span class="step-title">Naming</span>
+                    <span class="step-desc">Nombre del plato automático</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">3</span>
+                    <span class="step-title">Plantilla</span>
+                    <span class="step-desc">Pasos según técnica de cocción</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">4</span>
+                    <span class="step-title">JSONL</span>
+                    <span class="step-desc">Serialización instruction→output</span>
+                </div>
+            </div>
+
+            <h3>Formato del Dato (JSONL)</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                    recetas_extended.jsonl
+                </div>
+                <pre>{<span class="string">"instruction"</span>: <span class="string">"Tengo salmón, limón y arroz."</span>,
+ <span class="string">"output"</span>: <span class="string">"¡Claro! Puedes preparar un delicioso 'Arroz con salmón'. Primero, prepara los ingredientes. Cocina el salmón en la sartén con un poco de aceite..."</span>}</pre>
+            </div>
+
+            <div class="info-card green-card">
+                <h4>💡 ¿Por qué JSONL?</h4>
+                <p style="margin-bottom:0;">El formato JSON Lines permite el <strong>streaming de datos</strong>
+                    durante el
+                    entrenamiento, optimizando el uso de memoria volátil. Cada línea es un ejemplo independiente que
+                    puede
+                    cargarse secuencialmente.</p>
+            </div>
+        </section>
+
+        <!-- 5. Entrenamiento -->
+        <section id="train">
+            <h2><span class="sec-icon">🏋️</span> 5. Entrenamiento desde Cero</h2>
+            <p>
+                El script <code>train_from_scratch.py</code> implementa el pipeline completo de Deep Learning. El
+                modelo
+                comenzó con una distribución de pesos aleatoria (Ruido Gaussiano) y fue sometido a
+                <strong>100 ciclos completos (épocas)</strong> sobre el dataset.
+            </p>
+
+            <h3>Hiperparámetros de Entrenamiento</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Valor</th>
+                        <th>Justificación Técnica</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>num_train_epochs</code></td>
+                        <td>100</td>
+                        <td>Ciclo extendido para asegurar la convergencia en un dataset de nicho.</td>
+                    </tr>
+                    <tr>
+                        <td><code>learning_rate</code></td>
+                        <td>5e-4</td>
+                        <td>Tasa alta necesaria para ajustes significativos en pesos aleatorios iniciales.</td>
+                    </tr>
+                    <tr>
+                        <td><code>weight_decay</code></td>
+                        <td>0.01</td>
+                        <td>Regularización L2 para evitar la especialización excesiva en el ruido del dataset.</td>
+                    </tr>
+                    <tr>
+                        <td><code>batch_size</code></td>
+                        <td>4</td>
+                        <td>Maximiza la actualización de pesos por paso dado el límite de memoria de hardware.</td>
+                    </tr>
+                    <tr>
+                        <td><code>fp16</code></td>
+                        <td>Habilitado</td>
+                        <td>Tensores de 16 bits para acelerar el cálculo matricial sin pérdida de precisión crítica.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>max_length</code></td>
+                        <td>128 tokens</td>
+                        <td>Optimiza la memoria GPU, permitiendo lotes más grandes y gradiente estable.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Tokenización (Byte-Pair Encoding)</h3>
+            <p>
+                Se utiliza el algoritmo <strong>BPE</strong> a través del tokenizador de GPT-2. Este método
+                descompone
+                palabras complejas en sub-tokens manejables, siendo robusto frente a errores ortográficos o términos
+                técnicos culinarios.
+            </p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                    Formateo del prompt
+                </div>
+                <pre><span class="comment"># Cada dato se transforma para que el modelo aprenda el patrón pregunta-respuesta</span>
+text = <span class="string">f"User: {instruction}\nAssistant: {output}{tokenizer.eos_token}"</span></pre>
+            </div>
+
+            <h3>Pipeline de Ejecución</h3>
+            <div class="flow-pipeline">
+                <div class="flow-step">
+                    <span class="step-num">1</span>
+                    <span class="step-title">Config</span>
+                    <span class="step-desc">Definir arquitectura Mini-GPT</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">2</span>
+                    <span class="step-title">Init</span>
+                    <span class="step-desc">Pesos aleatorios (cerebro vacío)</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">3</span>
+                    <span class="step-title">Mapping</span>
+                    <span class="step-desc">User/Assistant markers</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">4</span>
+                    <span class="step-title">Train</span>
+                    <span class="step-desc">100 épocas, Backpropagation</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">5</span>
+                    <span class="step-title">Save</span>
+                    <span class="step-desc">Serialización .safetensors</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Inferencia -->
+        <section id="inference">
+            <h2><span class="sec-icon">🚀</span> 6. Inferencia y Generación</h2>
+            <p>
+                El script <code>inference_scratch.py</code> actúa como la interfaz de ejecución que permite
+                transformar una entrada de texto (prompt) en una respuesta coherente generada por el modelo.
+            </p>
+
+            <h3>Flujo de Generación de Texto</h3>
+            <div class="flow-pipeline">
+                <div class="flow-step">
+                    <span class="step-num">1</span>
+                    <span class="step-title">Input</span>
+                    <span class="step-desc">Prompt del usuario</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">2</span>
+                    <span class="step-title">Encoding</span>
+                    <span class="step-desc">Tensores de PyTorch</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">3</span>
+                    <span class="step-title">Forward Pass</span>
+                    <span class="step-desc">Predicción de probabilidades</span>
+                </div>
+                <div class="flow-step">
+                    <span class="step-num">4</span>
+                    <span class="step-title">Decoding</span>
+                    <span class="step-desc">IDs → lenguaje natural</span>
+                </div>
+            </div>
+
+            <h3>Parámetros de Muestreo Estocástico</h3>
+            <p>
+                Para evitar que el modelo sea determinista y repetitivo, se utilizan parámetros de muestreo que
+                controlan
+                la creatividad y la coherencia del texto generado:
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Valor</th>
+                        <th>Explicación Técnica</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>max_length</code></td>
+                        <td>200</td>
+                        <td>Límite superior de tokens generados para evitar bucles infinitos.</td>
+                    </tr>
+                    <tr>
+                        <td><code>temperature</code></td>
+                        <td>0.7</td>
+                        <td>Suaviza la distribución de probabilidad. Valores bajos = más preciso, altos = más
+                            creativo.</td>
+                    </tr>
+                    <tr>
+                        <td><code>top_k</code></td>
+                        <td>50</td>
+                        <td>Filtra los 50 tokens más probables, descartando opciones irrelevantes.</td>
+                    </tr>
+                    <tr>
+                        <td><code>top_p</code></td>
+                        <td>0.95</td>
+                        <td>Nucleus Sampling: selecciona el conjunto mínimo de tokens cuya probabilidad sumada sea
+                            0.95.</td>
+                    </tr>
+                    <tr>
+                        <td><code>repetition_penalty</code></td>
+                        <td>1.2</td>
+                        <td>Penaliza la repetición de tokens ya generados, mejorando la variedad.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-card">
+                <h4>⚡ Detección de Hardware</h4>
+                <p style="margin-bottom:0;">El script detecta automáticamente la presencia de GPU vía CUDA. Si está
+                    disponible, el modelo se transfiere a la VRAM mediante <code>model.to("cuda")</code>, reduciendo
+                    la
+                    latencia de respuesta de segundos a milisegundos.</p>
+            </div>
+
+            <h3>Ejemplo de Uso</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                    Terminal
+                </div>
+                <pre><span class="comment"># Ejecutar inferencia</span>
+$ python inference_scratch.py
+
+Cargando modelo desde ./chef-bot-scratch-final...
+Generando para: 'pollo, limón y arroz'...
+--------------------------------------------------
+¡Claro! Puedes preparar un delicioso 'Arroz con pollo'.
+Primero, prepara los ingredientes...
+--------------------------------------------------</pre>
+            </div>
+        </section>
+
+        <!-- 7. Conversión GGUF -->
+        <section id="gguf">
+            <h2><span class="sec-icon">📦</span> 7. Conversión a formato GGUF</h2>
+            <p>
+                El hito final del proyecto es la conversión al formato <strong>GGUF</strong>. Este paso es vital
+                para la democratización de la IA:
+            </p>
+            <ol>
+                <li><strong>Cuantización:</strong> Reducción del tamaño del modelo de 32 bits a 4 u 8 bits con
+                    mínima
+                    pérdida de precisión.</li>
+                <li><strong>Inferencia en CPU:</strong> Eliminación de la dependencia de tarjetas gráficas costosas.
+                </li>
+                <li><strong>Portabilidad:</strong> Un único archivo binario (<code>chef-bot-scratch.gguf</code>, ~93
+                    MB) que
+                    contiene pesos, metadatos y tokenizador.</li>
+            </ol>
+            <div class="info-card green-card">
+                <h4>🖥️ Uso con LM Studio</h4>
+                <p style="margin-bottom:0;">El archivo <code>.gguf</code> está listo para ser cargado directamente
+                    en
+                    <strong>LM Studio</strong> u otras herramientas locales, permitiendo usar tu IA con una interfaz
+                    gráfica amigable sin necesidad de código.
+                </p>
+            </div>
+        </section>
+
+        <!-- 8. Código Fuente -->
+        <section id="codigo">
+            <h2><span class="sec-icon">💻</span> 8. Código Fuente Completo</h2>
+
+            <h3>generate_dataset.py</h3>
+            <p>El "creador" de datos: genera 5,000 recetas sintéticas combinando ingredientes, técnicas y
+                plantillas.</p>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                    generate_dataset.py
+                </div>
+                <pre><span class="keyword">import</span> json
+<span class="keyword">import</span> random
+
+<span class="comment"># Bases de datos de palabras</span>
+proteinas = [<span class="string">"pechugas de pollo"</span>, <span class="string">"muslos de pollo"</span>, <span class="string">"ternera"</span>, <span class="string">"cerdo"</span>,
+             <span class="string">"merluza"</span>, <span class="string">"salmón"</span>, <span class="string">"atún"</span>, <span class="string">"huevos"</span>, <span class="string">"tofu"</span>, ...]
+verduras  = [<span class="string">"cebolla"</span>, <span class="string">"pimiento"</span>, <span class="string">"zanahoria"</span>, <span class="string">"calabacín"</span>, ...]
+carbohidratos = [<span class="string">"patatas"</span>, <span class="string">"arroz"</span>, <span class="string">"pasta"</span>, <span class="string">"quinoa"</span>, ...]
+extras    = [<span class="string">"limón"</span>, <span class="string">"vino blanco"</span>, <span class="string">"nata"</span>, <span class="string">"albahaca"</span>, ...]
+tecnicas  = [<span class="string">"al horno"</span>, <span class="string">"a la plancha"</span>, <span class="string">"estofado"</span>, <span class="string">"al vapor"</span>, ...]
+
+<span class="keyword">def</span> <span class="function">generar_receta</span>():
+    n_ing = random.randint(<span class="number">2</span>, <span class="number">4</span>)
+    pool = proteinas + verduras + carbohidratos + extras
+    seleccion = random.sample(pool, n_ing)
+
+    <span class="comment"># Crear instrucción del usuario con formatos variados</span>
+    instruction = random.choice(formatos_input)
+
+    <span class="comment"># Generar pasos según técnica (horno, plancha, estofado...)</span>
+    output = plantilla_inicio + pasos_cocina
+
+    <span class="keyword">return</span> {<span class="string">"instruction"</span>: instruction, <span class="string">"output"</span>: output}
+
+<span class="comment"># Generar 5000 recetas</span>
+<span class="keyword">with</span> <span class="function">open</span>(<span class="string">"recetas_extended.jsonl"</span>, <span class="string">"w"</span>) <span class="keyword">as</span> f:
+    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="function">range</span>(<span class="number">5000</span>):
+        receta = <span class="function">generar_receta</span>()
+        json.dump(receta, f, ensure_ascii=<span class="keyword">False</span>)
+        f.write(<span class="string">"\n"</span>)</pre>
+            </div>
+
+            <h3>train_from_scratch.py</h3>
+            <p>El "gimnasio" donde se entrena el modelo: define la arquitectura, carga datos y ejecuta el
+                entrenamiento.</p>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                    train_from_scratch.py
+                </div>
+                <pre><span class="keyword">from</span> transformers <span class="keyword">import</span> (
+    AutoConfig, AutoModelForCausalLM, AutoTokenizer,
+    TrainingArguments, Trainer, DataCollatorForLanguageModeling
+)
+
+<span class="comment"># 1. Configuración "Mini-GPT" (Desde Cero)</span>
+model_config = AutoConfig.from_pretrained(<span class="string">"gpt2"</span>,
+    vocab_size=<span class="number">50257</span>, n_positions=<span class="number">1024</span>,
+    n_embd=<span class="number">512</span>,    <span class="comment"># Dimensiones reducidas (original: 768)</span>
+    n_layer=<span class="number">6</span>,     <span class="comment"># Menos capas (original: 12)</span>
+    n_head=<span class="number">8</span>,      <span class="comment"># Menos cabezas (original: 12)</span>
+)
+
+<span class="comment"># 2. Modelo con pesos ALEATORIOS (cerebro vacío)</span>
+model = AutoModelForCausalLM.<span class="function">from_config</span>(model_config)
+
+<span class="comment"># 3. Cargar dataset y formatear como User/Assistant</span>
+dataset = load_dataset(<span class="string">"json"</span>, data_files=<span class="string">"recetas_extended.jsonl"</span>)
+
+<span class="comment"># 4. Entrenamiento: 100 épocas, lr=5e-4, fp16</span>
+training_args = TrainingArguments(
+    num_train_epochs=<span class="number">100</span>,
+    per_device_train_batch_size=<span class="number">4</span>,
+    learning_rate=<span class="number">5e-4</span>,
+    fp16=torch.cuda.is_available(),
+)
+
+trainer = Trainer(model=model, args=training_args, ...)
+trainer.<span class="function">train</span>()
+
+<span class="comment"># 5. Guardar modelo final</span>
+trainer.<span class="function">save_model</span>(<span class="string">"./chef-bot-scratch-final"</span>)</pre>
+            </div>
+
+            <h3>inference_scratch.py</h3>
+            <p>La demostración de que funciona: carga el modelo y genera recetas a partir de ingredientes.</p>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                    inference_scratch.py
+                </div>
+                <pre><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoModelForCausalLM, AutoTokenizer, pipeline
+
+model_path = <span class="string">"./chef-bot-scratch-final"</span>
+model = AutoModelForCausalLM.<span class="function">from_pretrained</span>(model_path)
+tokenizer = AutoTokenizer.<span class="function">from_pretrained</span>(model_path)
+
+generator = <span class="function">pipeline</span>(<span class="string">"text-generation"</span>, model=model, tokenizer=tokenizer)
+
+<span class="keyword">def</span> <span class="function">generar_receta</span>(ingredientes):
+    prompt = <span class="string">f"User: Tengo {ingredientes}.\nAssistant:"</span>
+    resultado = generator(prompt,
+        max_length=<span class="number">200</span>, temperature=<span class="number">0.7</span>,
+        top_k=<span class="number">50</span>, top_p=<span class="number">0.95</span>,
+        repetition_penalty=<span class="number">1.2</span>,
+    )
+    <span class="keyword">return</span> resultado[<span class="number">0</span>][<span class="string">'generated_text'</span>]
+
+<span class="comment"># Pruebas</span>
+<span class="function">print</span>(<span class="function">generar_receta</span>(<span class="string">"pollo, limón y arroz"</span>))
+<span class="function">print</span>(<span class="function">generar_receta</span>(<span class="string">"huevos y patatas"</span>))</pre>
+            </div>
+        </section>
+
+        <!-- 9. Conclusiones -->
+        <section id="conclusion">
+            <h2><span class="sec-icon">✅</span> 9. Conclusiones</h2>
+            <p>
+                Hemos logrado crear un modelo funcional especializado en una tarea concreta (cocina) sin depender de
+                grandes tecnológicas ni modelos pre-entrenados. Aunque es pequeño ("Tiny LLM"), demuestra los
+                principios
+                fundamentales de la Inteligencia Artificial Generativa:
+            </p>
+            <div class="arch-grid" style="margin-top: 1rem;">
+                <div class="arch-card">
+                    <span class="value" style="font-size: 2.5rem;">📊</span>
+                    <span class="label"><strong>Datos</strong><br>5,000 recetas sintéticas</span>
+                </div>
+                <div class="arch-card">
+                    <span class="value" style="font-size: 2.5rem;">🏗️</span>
+                    <span class="label"><strong>Arquitectura</strong><br>Mini-GPT Transformer</span>
+                </div>
+                <div class="arch-card">
+                    <span class="value" style="font-size: 2.5rem;">⚡</span>
+                    <span class="label"><strong>Computación</strong><br>100 épocas de entrenamiento</span>
+                </div>
+                <div class="arch-card">
+                    <span class="value" style="font-size: 2.5rem;">🧠</span>
+                    <span class="label"><strong>Conocimiento</strong><br>IA culinaria funcional</span>
+                </div>
+            </div>
+            <p style="margin-top: 1.5rem;">
+                El asistente culinario resultante demuestra una alta capacidad para seguir instrucciones y mantener
+                la
+                coherencia en recetas complejas. La metodología aplicada valida que el entrenamiento "from scratch"
+                es
+                una alternativa poderosa para aplicaciones donde la <strong>privacidad de los datos</strong> y la
+                <strong>especificidad del dominio</strong> son prioritarias.
+            </p>
+        </section>
+
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer>
+        <p><strong>Memoria de Proyecto: Creación de un LLM de Cocina desde Cero</strong></p>
+        <p>Desarrollado en el marco de la asignatura de Procesamiento de Lenguaje Natural / Machine Learning — 2026</p>
+        <p style="margin-top: 1rem;"><a href="index.html">← Volver al portafolio</a></p>
+    </footer>
+
+    <!-- TOC Active Link Script -->
+    <script>
+        const toc = document.querySelector('.toc');
+        const hero = document.querySelector('.hero');
+        const tocLinks = document.querySelectorAll('.toc a');
+        const sections = document.querySelectorAll('section[id]');
+
+        function onScroll() {
+            // Show/hide TOC based on hero
+            const heroBottom = hero.offsetTop + hero.offsetHeight;
+            if (window.scrollY >= heroBottom - 100) {
+                toc.classList.add('visible');
+            } else {
+                toc.classList.remove('visible');
+            }
+
+            // Active link
+            let current = '';
+            sections.forEach(section => {
+                const top = section.offsetTop - 120;
+                if (window.scrollY >= top) {
+                    current = section.getAttribute('id');
+                }
+            });
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', onScroll);
+        onScroll();
+    </script>
+
+</body>
+
+</html>
