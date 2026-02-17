@@ -314,7 +314,8 @@ pip install "unsloth[...] @ git+..." --no-deps</code></pre>
                 <li><strong>Edición de Código:</strong> Parcheo de <code>__init__.py</code> de Unsloth.</li>
                 <li><strong>Inyección de Binarios:</strong> Spoofing de archivos <code>.so</code>.</li>
                 <li><strong>Variables de Entorno:</strong> <code>BNB_CUDA_VERSION</code>, <code>LD_LIBRARY_PATH</code>,
-                    <code>TORCH_CUDA_ARCH_LIST</code>.</li>
+                    <code>TORCH_CUDA_ARCH_LIST</code>.
+                </li>
                 <li><strong>Gestión de Paquetes:</strong> Uso de flags <code>--no-deps</code> y repositorios mixtos.
                 </li>
             </ul>
@@ -327,6 +328,240 @@ pip install "unsloth[...] @ git+..." --no-deps</code></pre>
             <p><strong>Conclusión:</strong> La RTX 5060 Ti es funcional a nivel hardware, pero el ecosistema de software
                 (PyTorch + Bitsandbytes + CUDA en WSL) tiene un retraso de implementación respecto al lanzamiento del
                 hardware "Bleeding Edge".</p>
+        </section>
+
+        <!-- ===== NUEVA SECCIÓN: FINE-TUNING EN APPLE SILICON ===== -->
+
+        <section>
+            <h2>5. Alternativa: Fine-Tuning en Apple Silicon (Mac con MLX)</h2>
+            <p>Ante la incompatibilidad de la RTX 5060 Ti, se adaptó el flujo de trabajo para ejecutarlo nativamente en
+                un
+                <strong>Mac (Apple Silicon)</strong> utilizando la librería <strong>MLX</strong> de Apple, que aprovecha
+                la
+                GPU y la memoria unificada del chip M1/M2/M3.
+            </p>
+
+            <div class="alert">
+                <strong>Objetivo:</strong> Realizar un Fine-Tuning sobre Mistral-7B para convertirlo en un asistente
+                experto en formalidad, capaz de responder siempre utilizando el tratamiento de "usted" y un tono
+                profesional.
+            </div>
+        </section>
+
+        <section>
+            <h2>6. Preparación del Entorno en Mac</h2>
+            <p>Se configuró el entorno de trabajo con las herramientas específicas para Apple Silicon:</p>
+
+            <ul class="steps-list">
+                <li>Crear directorio de trabajo: <code>cd /Users/.../FineTuningASI</code></li>
+                <li>Crear y activar entorno virtual: <code>python3 -m venv venv && source venv/bin/activate</code></li>
+                <li>Configurar caché de modelos: <code>export HF_HOME=$(pwd)/cache</code></li>
+                <li>Instalar librerías: <code>pip install mlx-lm huggingface_hub</code></li>
+            </ul>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_instalacion_entorno_mlx.png" alt="Instalación entorno MLX">
+                <p class="caption">Fig 9. Creación del entorno virtual e instalación de mlx-lm y huggingface_hub en Mac.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <h2>7. Creación y Estructuración del Dataset</h2>
+            <p>Se creó un dataset de 20 ejemplos en formato <strong>JSONL</strong> con el formato de instrucción de
+                Mistral
+                (<code>&lt;s&gt;[INST] ... [/INST] ... &lt;/s&gt;</code>).</p>
+
+            <h3>Formato del Dataset</h3>
+            <p>Cada ejemplo contiene un campo <code>text</code> con la instrucción y la respuesta formal esperada:</p>
+            <pre><code>{"text": "&lt;s&gt;[INST] Hola, ¿quién eres? [/INST] Buenas tardes. Soy un asistente virtual diseñado para ayudarle. ¿En qué puedo servirle hoy? &lt;/s&gt;"}</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_edicion_dataset_jsonl.png" alt="Edición del dataset JSONL">
+                <p class="caption">Fig 10. Edición del archivo <code>datos_asistente_formal.jsonl</code> con ejemplos de
+                    entrenamiento.</p>
+            </div>
+
+            <p>Se generaron los archivos <code>train.jsonl</code>, <code>valid.jsonl</code> y <code>test.jsonl</code>
+                (copias
+                del original) para satisfacer los requisitos de la herramienta de entrenamiento.</p>
+        </section>
+
+        <section>
+            <h2>8. Entrenamiento del Modelo (Fine-Tuning con LoRA)</h2>
+            <p>Se utilizó <strong>LoRA (Low-Rank Adaptation)</strong> para ajustar solo las capas de atención del modelo
+                base <code>mistralai/Mistral-7B-v0.1</code>, reduciendo así el consumo de RAM.</p>
+
+            <h3>Error 1: Training set not found</h3>
+            <div class="alert">
+                <code>ValueError: Training set not found or empty.</code>
+            </div>
+            <p><strong>Causa:</strong> El archivo de datos se llamaba <code>datos_asistente_formal.jsonl</code> en lugar
+                del nombre esperado por defecto.</p>
+            <p><strong>Solución:</strong> Renombrar a <code>train.jsonl</code>:</p>
+            <pre><code>mv datos_asistente_formal.jsonl train.jsonl</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_error_training_set_not_found.png" alt="Error training set">
+                <p class="caption">Fig 11. Error: el script no encuentra el dataset de entrenamiento.</p>
+            </div>
+
+            <h3>Error 2: Validation set not found</h3>
+            <div class="alert">
+                <code>ValueError: Validation set not found or empty.</code>
+            </div>
+            <p><strong>Solución:</strong> Crear copias del archivo para validación y test:</p>
+            <pre><code>cp train.jsonl valid.jsonl
+cp train.jsonl test.jsonl</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_error_validation_set_not_found.png" alt="Error validation set">
+                <p class="caption">Fig 12. Segundo error: falta el conjunto de validación.</p>
+            </div>
+
+            <h3>Entrenamiento Exitoso</h3>
+            <p>Con los archivos correctamente nombrados, se ejecutó el entrenamiento LoRA con éxito:</p>
+            <pre><code>python -m mlx_lm.lora \
+  --model mistralai/Mistral-7B-v0.1 \
+  --train \
+  --data ./ \
+  --iters 600 \
+  --batch-size 1 \
+  --num-layers 4 \
+  --adapter-file adapters.npz</code></pre>
+            <p>El entrenamiento completó las iteraciones bajando el <em>loss</em> de 1.4 a 0.2, con un uso de memoria de
+                ~14.88 GB.</p>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_entrenamiento_lora_exitoso.png" alt="Entrenamiento LoRA exitoso">
+                <p class="caption">Fig 13. Entrenamiento LoRA completado con éxito. Los pesos se guardan en
+                    <code>adapters.safetensors</code>.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>9. Fusión y Conversión del Modelo a GGUF</h2>
+
+            <h3>9.1. Clonación de llama.cpp</h3>
+            <p>Para convertir el modelo a formato GGUF (compatible con LM Studio), clonamos el repositorio
+                <code>llama.cpp</code>:</p>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_clonacion_llama_cpp.png" alt="Clonación llama.cpp">
+                <p class="caption">Fig 14. Clonación del repositorio llama.cpp.</p>
+            </div>
+
+            <h3>Error: Dependencias incompatibles</h3>
+            <div class="alert">
+                <code>ERROR: Could not find a version that satisfies the requirement matplotlib&lt;3.10.0</code>
+            </div>
+            <p><strong>Solución:</strong> Instalar solo las dependencias necesarias manualmente:</p>
+            <pre><code>pip install numpy sentencepiece transformers gguf protobuf</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_error_dependencias_llama_cpp.png" alt="Error dependencias">
+                <p class="caption">Fig 15. Conflicto de versiones al instalar requisitos de llama.cpp.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_instalacion_dependencias_manual.png" alt="Instalación manual">
+                <p class="caption">Fig 16. Instalación manual de dependencias necesarias.</p>
+            </div>
+
+            <h3>9.2. Fusión del Modelo (Merge)</h3>
+            <p>Combinación de los pesos base con los adaptadores LoRA entrenados:</p>
+            <pre><code>python -m mlx_lm.fuse \
+  --model mistralai/Mistral-7B-v0.1 \
+  --adapter-file adapters.npz \
+  --save-path fused_model</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_fusion_modelo_lora.png" alt="Fusión del modelo">
+                <p class="caption">Fig 17. Fusión del adaptador LoRA con el modelo base Mistral-7B.</p>
+            </div>
+
+            <h3>9.3. Conversión a GGUF</h3>
+
+            <h4>Error: torch no encontrado</h4>
+            <div class="alert">
+                <code>ModuleNotFoundError: No module named 'torch'</code>
+            </div>
+            <p><strong>Solución:</strong> <code>pip install torch</code></p>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_error_torch_no_encontrado.png" alt="Error torch">
+                <p class="caption">Fig 18. Error al ejecutar la conversión: falta torch.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_instalacion_torch.png" alt="Instalación torch">
+                <p class="caption">Fig 19. Instalación de torch y dependencias asociadas.</p>
+            </div>
+
+            <h4>Error: Tipo de cuantización inválido</h4>
+            <div class="alert">
+                <code>argument --outtype: invalid choice: 'q4_k_m' (choose from 'f32', 'f16', 'bf16', 'q8_0', 'auto')</code>
+            </div>
+            <p><strong>Solución:</strong> Usar <code>f16</code> en lugar de <code>q4_k_m</code> para mantener calidad:
+            </p>
+            <pre><code>python llama.cpp/convert_hf_to_gguf.py modelo_fusionado \
+  --outfile modelo-formal.gguf --outtype f16</code></pre>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_error_tipo_cuantizacion.png" alt="Error cuantización">
+                <p class="caption">Fig 20. El formato q4_k_m no está disponible; se usa f16.</p>
+            </div>
+
+            <h3>Conversión Exitosa</h3>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_conversion_gguf_exitosa.png" alt="Conversión GGUF exitosa">
+                <p class="caption">Fig 21. Conversión del modelo fusionado a formato GGUF en progreso.</p>
+            </div>
+
+            <div class="image-container">
+                <img src="asi/Finetunning/mac_modelo_exportado_final.png" alt="Modelo exportado">
+                <p class="caption">Fig 22. Modelo exportado exitosamente: <code>modelo-formal.gguf</code> (~14.5 GB).
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <h2>10. Resultados y Conclusiones del Fine-Tuning en Mac</h2>
+
+            <h3>Pruebas Comparativas</h3>
+            <p>Se realizaron pruebas en <strong>LM Studio</strong> comparando el modelo base con el modelo ajustado:</p>
+
+            <div class="alert"
+                style="border-color: #7ee787; background-color: rgba(126, 231, 135, 0.1); color: #7ee787;">
+                <strong>Modelo Base (sin fine-tuning):</strong><br>
+                Pregunta: "¿Me puedes decir la hora?"<br>
+                Respuesta: "Claro, son las 10:30" <em>(Tono informal)</em>
+            </div>
+
+            <div class="alert"
+                style="border-color: #d2a8ff; background-color: rgba(210, 168, 255, 0.1); color: #e2c0ff;">
+                <strong>Modelo Ajustado (fine-tuned):</strong><br>
+                Pregunta: "¿Me puedes decir la hora?"<br>
+                Respuesta: "Buenas tardes. Actualmente son exactamente las diez y media. ¿Desea usted saber algo más?"
+                <em>(Tono formal, tratamiento de "usted")</em>
+            </div>
+
+            <h3>Conclusiones</h3>
+            <ul class="steps-list">
+                <li><strong>Viabilidad en Apple Silicon:</strong> El hardware M1/M2/M3 es capaz de entrenar modelos de
+                    7B
+                    parámetros eficientemente gracias a la memoria unificada.</li>
+                <li><strong>Importancia del Dataset:</strong> La estructuración correcta de archivos <code>.jsonl</code>
+                    y
+                    sus nombres estándar (<code>train</code>, <code>valid</code>, <code>test</code>) es crítica.</li>
+                <li><strong>Eficiencia de LoRA:</strong> Ajustar solo las capas de atención (4 capas) es suficiente para
+                    cambiar completamente el estilo de respuesta del modelo.</li>
+                <li><strong>Gestión de Dependencias:</strong> Es vital resolver conflictos de versiones entre librerías
+                    dinámicas como <code>mlx</code>, <code>torch</code> y <code>llama.cpp</code>.</li>
+                <li><strong>Formato GGUF:</strong> La conversión a f16 produce un modelo de ~14.5 GB funcional en LM
+                    Studio, aunque sin cuantización adicional.</li>
+            </ul>
         </section>
 
     </main>
